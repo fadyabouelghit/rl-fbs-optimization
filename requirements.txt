@@ -1,0 +1,11 @@
+# Python dependencies for the PPO pipeline (ppo/ package).
+# The venv currently in use satisfies these; matlabengine must match the
+# installed MATLAB release (R2024b -> 24.2.*).
+numpy>=2.0
+pandas>=2.2
+matplotlib>=3.9
+gymnasium>=1.0
+stable-baselines3>=2.6
+torch>=2.5
+matlabengine==24.2.*
+pytest>=8.0
