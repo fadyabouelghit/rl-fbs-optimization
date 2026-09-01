@@ -1,12 +1,15 @@
 """
-plot_trajectories.py — overlay GA + PPO FBS trajectories on common axes.
+plot_trajectories.py — overlay policy rollout FBS trajectories on common axes.
 
-Supported sources, auto-detected from path:
-  - ga_runs/run_NNN/                              -> uses trajectory.csv or result.mat
-  - ga_runs/run_NNN/trajectory.csv                -> flat per-generation best individuals
-  - ga_runs/run_NNN/result.mat                    -> reads history.bestIndividuals
+Supported inputs, auto-detected from path:
   - test_logs/<X-Y-Z>/<stem>                      -> appends "_trajectory.csv"
-  - test_logs/<X-Y-Z>/<stem>_trajectory.csv       -> PPO rollout (MultiIndex CSV)
+  - test_logs/<X-Y-Z>/<stem>_trajectory.csv       -> rollout (MultiIndex CSV)
+  - <run_dir>/ or any directory                   -> finds trajectory.csv
+  - any flat CSV with fbs<i>_<field> columns
+
+Trajectories can be split into *groups* (e.g. two policies, or before/after a
+change). Each group draws from its own sequential colormap and linestyle, so
+overlapping paths stay traceable.
 
 Constraint: do not mix 1-FBS and 2-FBS trajectories in one figure.
 The plotter will raise if num_fbs differs across the inputs.
@@ -15,16 +18,17 @@ Python usage:
 
     from plot_trajectories import plot_trajectories
     plot_trajectories([
-        ("ga_runs/run_001",                                 "GA gen-best"),
-        ("test_logs/1-1-1/run_039_20260501_122954",         "PPO rollout"),
-    ], title="GA vs PPO  (1-1-1)")
+        ("test_logs/1-1-1/run_039_20260501_122954", "baseline"),
+        ("test_logs/1-1-1/run_062_20260514_090211", "shaped"),
+    ], title="Rollout comparison  (1-1-1)")
 
 CLI:
 
     python plot_trajectories.py \\
-        ga_runs/run_001 \\
         test_logs/1-1-1/run_039_20260501_122954_trajectory.csv \\
-        --label "GA" --label "PPO" --title "GA vs PPO" --save out.png
+        test_logs/1-1-1/run_062_20260514_090211_trajectory.csv \\
+        --label "baseline" --label "shaped" \\
+        --group a --group b --title "Rollout comparison" --save out.png
 """
 from __future__ import annotations
 
@@ -47,15 +51,15 @@ except ImportError:
 
 
 REPO_ROOT = Path(__file__).resolve().parent
-GA_RUNS = REPO_ROOT / "ga_runs"
-RL_TEST_LOGS = REPO_ROOT / "test_logs"
+TEST_LOGS = REPO_ROOT / "test_logs"
 
 
 # --------------------------------------------------------------------------- #
 @dataclass
 class Trajectory:
     name: str
-    source: str                      # "ga" or "rl"
+    group: str                       # style group; trajectories sharing one
+                                     # group share a colormap and linestyle
     num_fbs: int
     df: pd.DataFrame                 # flat columns: fbs<i>_<field> + 'step'
     mbs_x: Optional[np.ndarray] = None
@@ -83,85 +87,18 @@ def _flatten_rl_csv(path: Path) -> pd.DataFrame:
     return flat
 
 
-def _read_ga_mat(path: Path) -> Tuple[pd.DataFrame, Optional[np.ndarray],
-                                      Optional[np.ndarray], int, Optional[str]]:
-    """Load a GA result.mat -> (flat_df, mbs_x, mbs_y, num_fbs, code)."""
-    from scipy.io import loadmat
-
-    data = loadmat(path, struct_as_record=False, squeeze_me=True)
-    history = data["history"]
-    best = np.asarray(history.bestIndividuals, dtype=float)
-    if best.ndim == 1:
-        best = best.reshape(1, -1)
-
-    # num_fbs: prefer the saved exp struct, fall back to reasonable guess
-    num_fbs = None
-    code = None
-    if "exp" in data:
-        exp_obj = data["exp"]
-        num_fbs = int(getattr(exp_obj, "numBS", 0)) or None
-        code = getattr(exp_obj, "code", None)
-        if isinstance(code, np.ndarray):
-            code = str(code)
-    total_cols = best.shape[1]
-    if num_fbs is None:
-        # Layouts seen so far:
-        #   5 * num_fbs              (legacy)
-        #   6 * num_fbs              (post multi-band commit, no MBS suffix)
-        #   6 * num_fbs + num_mbs    (current: trailing MBS band_flag rows)
-        candidates = []
-        for genes in (5, 6):
-            if total_cols % genes == 0:
-                candidates.append((genes, total_cols // genes, 0))
-        # Try 6 genes/FBS plus a small trailing MBS block
-        for trailing in range(1, min(total_cols // 6, 8) + 1):
-            rem = total_cols - trailing
-            if rem > 0 and rem % 6 == 0:
-                candidates.append((6, rem // 6, trailing))
-        if not candidates:
-            raise ValueError(f"Cannot infer num_fbs from {total_cols} columns in {path}")
-        # Prefer the layout with trailing MBS columns (matches current GA output)
-        candidates.sort(key=lambda c: (c[0] != 6, -c[2]))
-        genes_per_fbs, num_fbs, num_mbs_trailing = candidates[0]
-    else:
-        # num_fbs known from saved exp struct; trailing cols (if any) are MBS.
-        if total_cols >= 6 * num_fbs:
-            genes_per_fbs = 6
-            num_mbs_trailing = total_cols - 6 * num_fbs
-        else:
-            genes_per_fbs = total_cols // num_fbs
-            num_mbs_trailing = 0
-
-    base_names = ["x", "y", "height", "power", "power_status", "band_flag"][:genes_per_fbs]
-    cols = [f"fbs{i}_{n}" for i in range(num_fbs) for n in base_names]
-    cols += [f"mbs{i}_band_flag" for i in range(num_mbs_trailing)]
-    df = pd.DataFrame(best, columns=cols)
-    df["step"] = np.arange(len(df))
-
-    mbs_x = mbs_y = None
-    if "mbs_params" in data:
-        mp = np.atleast_2d(np.asarray(data["mbs_params"], dtype=float))
-        # squeeze_me=True can flatten (4, 1) -> (4,); after atleast_2d it's
-        # either (4, K) for K MBSs or (1, 4) when there's just one. Detect:
-        if mp.shape[0] != 4 and mp.shape[1] == 4:
-            mp = mp.T
-        # ga_experiment.m row-swaps to (x, y, h, p)
-        mbs_x = mp[0, :].ravel()
-        mbs_y = mp[1, :].ravel()
-
-    return df, mbs_x, mbs_y, num_fbs, code
-
-
 def _resolve_path(spec: Union[str, Path]) -> Path:
     """Map a user-friendly spec to a concrete file."""
     p = Path(spec)
     if not p.is_absolute():
         p = (REPO_ROOT / p).resolve() if not p.exists() else p.resolve()
     if p.is_dir():
-        for cand in ("trajectory.csv", "result.mat"):
-            if (p / cand).exists():
-                return p / cand
-        raise FileNotFoundError(f"No trajectory.csv or result.mat in {p}")
+        if (p / "trajectory.csv").exists():
+            return p / "trajectory.csv"
+        matches = sorted(p.glob("*_trajectory.csv"))
+        if matches:
+            return matches[0]
+        raise FileNotFoundError(f"No trajectory CSV in {p}")
     if not p.exists():
         sibling = p.with_name(p.name + "_trajectory.csv")
         if sibling.exists():
@@ -170,57 +107,13 @@ def _resolve_path(spec: Union[str, Path]) -> Path:
     return p
 
 
-def load_trajectory(spec: Union[str, Path], name: Optional[str] = None) -> Trajectory:
+def load_trajectory(spec: Union[str, Path], name: Optional[str] = None,
+                    group: str = "default") -> Trajectory:
     """Auto-detect format and return a normalized `Trajectory`."""
     path = _resolve_path(spec)
     parts = path.parts
 
-    # ----- GA result.mat
-    if path.suffix == ".mat":
-        df, mbs_x, mbs_y, num_fbs, code = _read_ga_mat(path)
-        cfg = path.parent / "experiment_config.json"
-        if cfg.exists() and code is None:
-            with cfg.open() as f:
-                code = json.load(f).get("code")
-        return Trajectory(
-            name=name or f"GA {path.parent.name}",
-            source="ga",
-            num_fbs=num_fbs,
-            df=df,
-            mbs_x=mbs_x,
-            mbs_y=mbs_y,
-            code=code,
-            path=path,
-        )
-
-    # ----- GA trajectory.csv
-    if "ga_runs" in parts and path.name == "trajectory.csv":
-        df = pd.read_csv(path)
-        num_fbs = sum(1 for c in df.columns if c.startswith("fbs") and c.endswith("_x"))
-        mbs_x = mbs_y = None
-        rmat = path.parent / "result.mat"
-        if rmat.exists():
-            try:
-                _, mbs_x, mbs_y, _, _ = _read_ga_mat(rmat)
-            except Exception:
-                pass
-        code = None
-        cfg = path.parent / "experiment_config.json"
-        if cfg.exists():
-            with cfg.open() as f:
-                code = json.load(f).get("code")
-        return Trajectory(
-            name=name or f"GA {path.parent.name}",
-            source="ga",
-            num_fbs=num_fbs,
-            df=df,
-            mbs_x=mbs_x,
-            mbs_y=mbs_y,
-            code=code,
-            path=path,
-        )
-
-    # ----- PPO test rollout
+    # ----- rollout CSV under test_logs/
     if "test_logs" in parts:
         df = _flatten_rl_csv(path)
         num_fbs = sum(1 for c in df.columns if c.startswith("fbs") and c.endswith("_x"))
@@ -244,8 +137,8 @@ def load_trajectory(spec: Union[str, Path], name: Optional[str] = None) -> Traje
 
         stem = path.name.replace("_trajectory.csv", "")
         return Trajectory(
-            name=name or f"PPO {stem}",
-            source="rl",
+            name=name or stem,
+            group=group,
             num_fbs=num_fbs,
             df=df,
             mbs_x=mbs_x,
@@ -254,32 +147,50 @@ def load_trajectory(spec: Union[str, Path], name: Optional[str] = None) -> Traje
             path=path,
         )
 
-    # ----- Fallback: try both readers
+    # ----- Fallback: MultiIndex rollout CSV, else a flat one.
+    # A flat CSV also *parses* under header=[0, 1] — it just yields nonsense
+    # (row 0 becomes the second header level), so accept that reading only
+    # when it actually produced FBS position columns.
     try:
         df = _flatten_rl_csv(path)
         num_fbs = sum(1 for c in df.columns if c.endswith("_x"))
-        return Trajectory(name=name or path.stem, source="rl", num_fbs=num_fbs,
-                          df=df, path=path)
+        if num_fbs:
+            return Trajectory(name=name or path.stem, group=group,
+                              num_fbs=num_fbs, df=df, path=path)
     except Exception:
         pass
     df = pd.read_csv(path)
     num_fbs = sum(1 for c in df.columns if c.startswith("fbs") and c.endswith("_x"))
     if num_fbs == 0:
-        raise ValueError(f"Could not parse {path} as a trajectory.")
-    return Trajectory(name=name or path.stem, source="ga", num_fbs=num_fbs,
+        raise ValueError(
+            f"Could not parse {path} as a trajectory: expected either a "
+            "MultiIndex rollout CSV or flat 'fbs<i>_x' / 'fbs<i>_y' columns."
+        )
+    return Trajectory(name=name or path.stem, group=group, num_fbs=num_fbs,
                       df=df, path=path)
 
 
 # --------------------------------------------------------------------------- #
 # Plotter
 # --------------------------------------------------------------------------- #
-def _normalize_specs(specs) -> Sequence[Tuple[Union[str, Path], Optional[str]]]:
+def _normalize_specs(
+    specs,
+) -> Sequence[Tuple[Union[str, Path], Optional[str], str]]:
+    """Accept a bare path, (path, label), or (path, label, group)."""
     norm = []
     for s in specs:
-        if isinstance(s, (tuple, list)) and len(s) == 2:
-            norm.append((s[0], s[1]))
+        if isinstance(s, (tuple, list)):
+            if len(s) == 3:
+                norm.append((s[0], s[1], s[2] or "default"))
+            elif len(s) == 2:
+                norm.append((s[0], s[1], "default"))
+            else:
+                raise ValueError(
+                    f"spec {s!r} must be a path, (path, label), or "
+                    "(path, label, group)"
+                )
         else:
-            norm.append((s, None))
+            norm.append((s, None, "default"))
     return norm
 
 
@@ -321,35 +232,50 @@ IEEE_PALETTE = [
     "#7f7f7f",   # neutral gray
 ]
 
-# Default per-source sequential colormaps. Each (trajectory, FBS) pair gets a
-# distinct shade so overlapping paths remain traceable.
-SOURCE_CMAPS = {
-    "ga": "Blues",
-    "rl": "Reds",
-}
+# Sequential colormaps handed out to style groups in first-seen order. Each
+# (trajectory, FBS) pair gets a distinct shade so overlapping paths stay
+# traceable. Pass `group_cmaps` to pin specific groups to specific colormaps.
+GROUP_CMAP_CYCLE = ["Reds", "Blues", "Greens", "Purples", "Oranges", "Greys"]
+
+# Linestyles handed out the same way, so groups stay distinguishable in print.
+GROUP_LINESTYLE_CYCLE = ["-", "--", "-.", ":"]
 
 
-def _assign_track_colors(trajs, num_fbs, source_cmaps):
-    """Map (traj_idx, fbs_idx) -> RGBA. Trajectories sharing a source split
-    that source's colormap across a 'safe' middle-to-dark band so all shades
+def _group_order(trajs) -> dict:
+    """Map group name -> index in first-seen order."""
+    order = {}
+    for t in trajs:
+        order.setdefault(t.group, len(order))
+    return order
+
+
+def _assign_track_colors(trajs, num_fbs, group_cmaps=None):
+    """Map (traj_idx, fbs_idx) -> RGBA. Trajectories sharing a group split
+    that group's colormap across a 'safe' middle-to-dark band so all shades
     remain visible on a white page."""
     from collections import defaultdict
 
-    tracks_per_source = defaultdict(int)
+    group_cmaps = group_cmaps or {}
+    order = _group_order(trajs)
+
+    tracks_per_group = defaultdict(int)
     for t in trajs:
-        tracks_per_source[t.source] += num_fbs
+        tracks_per_group[t.group] += num_fbs
 
     counters = defaultdict(int)
     colors = {}
     LO, HI = 0.40, 0.90
     for ti, t in enumerate(trajs):
-        cmap = plt.get_cmap(source_cmaps.get(t.source, "Greys"))
-        total = tracks_per_source[t.source]
+        name = group_cmaps.get(
+            t.group, GROUP_CMAP_CYCLE[order[t.group] % len(GROUP_CMAP_CYCLE)]
+        )
+        cmap = plt.get_cmap(name)
+        total = tracks_per_group[t.group]
         for fi in range(num_fbs):
-            idx = counters[t.source]
+            idx = counters[t.group]
             frac = (LO + (HI - LO) * idx / (total - 1)) if total > 1 else 0.72
             colors[(ti, fi)] = cmap(frac)
-            counters[t.source] += 1
+            counters[t.group] += 1
     return colors
 
 
@@ -363,7 +289,7 @@ def plot_trajectories(
     annotate_endpoints: bool = True,
     style_preset: str = "ieee",
     palette: Optional[Sequence[str]] = None,
-    source_cmaps: Optional[dict] = None,
+    group_cmaps: Optional[dict] = None,
     power_cmap: str = "viridis",
     legend_loc: str = "bottom",
     legend_ncol: Optional[int] = None,
@@ -374,15 +300,16 @@ def plot_trajectories(
 ):
     """Plot one or more FBS trajectories on common axes (IEEE-styled by default).
 
-    Each trajectory is drawn as a line in its own color (GA solid, RL dashed),
-    with a clearly differentiated start/end marker:
+    Each trajectory is drawn as a line in its own color, with the linestyle
+    set by its style group, and a clearly differentiated start/end marker:
       * Start = filled circle in the trajectory's color
       * End   = filled diamond in the trajectory's color (slightly larger)
     The legend explicitly labels Start / End / MBS so meaning is unambiguous.
 
     Parameters
     ----------
-    specs : iterable of (path, label) tuples or bare paths
+    specs : iterable of bare paths, (path, label), or (path, label, group)
+        tuples. Trajectories sharing a group share a colormap and linestyle.
     title : optional figure title
     figsize : default (5.0, 4.0) — fits an IEEE single column comfortably
     show_mbs : draw MBS markers when known
@@ -390,7 +317,7 @@ def plot_trajectories(
         - 'identity' (default): one color per trajectory from `palette`
         - 'power': segments colored by transmit power; shared global colormap
           and colorbar in W. Endpoint glyphs adopt the power-coded color.
-        - 'step': segments colored by step / generation index.
+        - 'step': segments colored by step index.
     mark_power_status : when True, overlay sparse markers along each path
         showing ON (filled) / OFF (hollow) status, plus matching legend entries.
     annotate_endpoints : draw the Start/End markers
@@ -398,12 +325,12 @@ def plot_trajectories(
         matplotlib defaults alone
     palette : optional flat color list. When provided, each trajectory gets
         the next color in the list (legacy behavior). When None (default),
-        colors are auto-shaded per source via `source_cmaps` instead.
-    source_cmaps : dict mapping source ('ga', 'rl') to a sequential matplotlib
-        colormap name. Each (trajectory, FBS) pair of that source draws a
-        distinct shade from the colormap so overlapping paths stay
-        traceable. Defaults to {'ga': 'Blues', 'rl': 'Reds'}. Ignored when
-        `palette` is set.
+        colors are auto-shaded per style group via `group_cmaps` instead.
+    group_cmaps : dict mapping a style group name to a sequential matplotlib
+        colormap name. Each (trajectory, FBS) pair in that group draws a
+        distinct shade from the colormap so overlapping paths stay traceable.
+        Groups not listed fall back to `GROUP_CMAP_CYCLE` in first-seen
+        order. Ignored when `palette` is set.
     power_cmap : colormap name when color_by='power' (default 'viridis')
     legend_loc : 'bottom' (default; placed under the axes, frameless),
         'best' (auto-place inside the axes), or any matplotlib loc string.
@@ -416,7 +343,7 @@ def plot_trajectories(
         raise ValueError(
             f"color_by must be 'identity', 'power', or 'step' (got {color_by!r})"
         )
-    trajs = [load_trajectory(p, n) for p, n in _normalize_specs(specs)]
+    trajs = [load_trajectory(p, n, g) for p, n, g in _normalize_specs(specs)]
     if not trajs:
         raise ValueError("No trajectories provided.")
 
@@ -459,7 +386,11 @@ def plot_trajectories(
                     mbs_drawn = True
 
         # ---- Trajectories -------------------------------------------------
-        source_ls = {"ga": "-", "rl": "--"}
+        group_order = _group_order(trajs)
+        group_ls = {
+            g: GROUP_LINESTYLE_CYCLE[i % len(GROUP_LINESTYLE_CYCLE)]
+            for g, i in group_order.items()
+        }
         step_cmap = plt.cm.viridis
         max_steps = max(len(t.df) for t in trajs)
         step_norm = mpl.colors.Normalize(vmin=0, vmax=max(max_steps - 1, 1))
@@ -490,14 +421,13 @@ def plot_trajectories(
         if palette is not None:
             track_colors = None
         else:
-            scs = source_cmaps if source_cmaps is not None else SOURCE_CMAPS
-            track_colors = _assign_track_colors(trajs, num_fbs, scs)
+            track_colors = _assign_track_colors(trajs, num_fbs, group_cmaps)
 
         traj_handles = []
         any_status_overlay = False
 
         for ti, t in enumerate(trajs):
-            ls = source_ls.get(t.source, "-")
+            ls = group_ls.get(t.group, "-")
 
             for fi in range(num_fbs):
                 if track_colors is not None:
@@ -627,13 +557,7 @@ def plot_trajectories(
             cb.ax.tick_params(labelsize=7)
             cb.outline.set_linewidth(0.6)
         elif color_by == "step":
-            sources = {t.source for t in trajs}
-            if sources == {"ga"}:
-                cb_label = "Generation"
-            elif sources == {"rl"}:
-                cb_label = "Step"
-            else:
-                cb_label = "Time index"
+            cb_label = "Step"
             sm = plt.cm.ScalarMappable(cmap=step_cmap, norm=step_norm)
             sm.set_array([])
             cb = fig.colorbar(sm, ax=ax, fraction=0.038, pad=0.025, aspect=28)
@@ -715,6 +639,9 @@ def main() -> None:
                    help="Trajectory paths or shortcuts (see module docstring).")
     p.add_argument("--label", action="append", default=None,
                    help="Display label; repeat once per path if given.")
+    p.add_argument("--group", action="append", default=None,
+                   help="Style group; repeat once per path if given. "
+                        "Paths sharing a group share a colormap and linestyle.")
     p.add_argument("--title", default=None)
     p.add_argument("--no-mbs", action="store_true")
     p.add_argument("--color-by", choices=("identity", "power", "step"),
@@ -731,8 +658,14 @@ def main() -> None:
 
     if args.label is not None and len(args.label) != len(args.paths):
         p.error("--label must be repeated once per path if provided.")
+    if args.group is not None and len(args.group) != len(args.paths):
+        p.error("--group must be repeated once per path if provided.")
 
-    specs = list(zip(args.paths, args.label or [None] * len(args.paths)))
+    specs = list(zip(
+        args.paths,
+        args.label or [None] * len(args.paths),
+        args.group or ["default"] * len(args.paths),
+    ))
     fig, _ = plot_trajectories(
         specs,
         title=args.title,

@@ -136,23 +136,12 @@ function user_positions = generate_user_positions(x_min, x_max, y_min, y_max, nu
     x_min = max(1, x_min);
     y_min = max(1, y_min);
 
-    % User map is ALWAYS the same (seed 0). Two ways to draw it:
-    %   legacy   : reset the GLOBAL stream (historical behavior; reproduces
-    %              old logged runs bit-for-bit, but leaks determinism into
-    %              the GA operators). Selected by optimizeBaseStation when
-    %              params.randomizeGA = false.
-    %   isolated : dedicated local stream; global RNG untouched, so GA
-    %              operators stay truly random (params.randomizeGA = true,
-    %              or SINREvaluation called outside the GA loop).
-    if isappdata(0, 'GA_LEGACY_USER_RNG') && getappdata(0, 'GA_LEGACY_USER_RNG')
-        rng(0);
-        user_positions = [randi([x_min, x_max], num_users, 1), ...
-                          randi([y_min, y_max], num_users, 1)];
-    else
-        s = RandStream('mt19937ar', 'Seed', 0);
-        user_positions = [randi(s, [x_min, x_max], num_users, 1), ...
-                          randi(s, [y_min, y_max], num_users, 1)];
-    end
+    % User map is ALWAYS the same (mt19937ar, seed 0), drawn from a dedicated
+    % local stream so the caller's global RNG is left untouched -- an episode
+    % rollout must not have its exploration noise reseeded by a SINR call.
+    s = RandStream('mt19937ar', 'Seed', 0);
+    user_positions = [randi(s, [x_min, x_max], num_users, 1), ...
+                      randi(s, [y_min, y_max], num_users, 1)];
 end
 
 function user_positions = generate_user_positions_clustered(x_min, x_max, y_min, y_max, num_users, separation, std1, std2)
@@ -174,16 +163,10 @@ function user_positions = generate_user_positions_clustered(x_min, x_max, y_min,
     mean1 = [adjusted_x_min + separation/2, adjusted_y_min + separation/2];
     mean2 = [adjusted_x_max - separation/2, adjusted_y_max - separation/2];
 
-    % Fixed user map; legacy vs isolated stream — see generate_user_positions.
-    if isappdata(0, 'GA_LEGACY_USER_RNG') && getappdata(0, 'GA_LEGACY_USER_RNG')
-        rng(0);
-        cluster1 = mean1 + std1 * randn(num_users/2, 2);
-        cluster2 = mean2 + std2 * randn(num_users/2, 2);
-    else
-        s = RandStream('mt19937ar', 'Seed', 0);
-        cluster1 = mean1 + std1 * randn(s, num_users/2, 2);
-        cluster2 = mean2 + std2 * randn(s, num_users/2, 2);
-    end
+    % Fixed user map from an isolated stream -- see generate_user_positions.
+    s = RandStream('mt19937ar', 'Seed', 0);
+    cluster1 = mean1 + std1 * randn(s, num_users/2, 2);
+    cluster2 = mean2 + std2 * randn(s, num_users/2, 2);
 
     user_positions = round([cluster1; cluster2]);
     user_positions(:, 1) = max(min(user_positions(:, 1), adjusted_x_max), adjusted_x_min);
@@ -240,7 +223,7 @@ function [df_users, df_users_table, avg_rate_connected_bpsHz, sum_rate_connected
     % MBS slot loop. Each slot is one (mbsIdx, bandIdx, active) triple.
     % A base MBS contributes two slots (coverage + capacity); a femto/fixed
     % BS contributes one slot at its pinned band. Inactive slots emit a zero
-    % column so the column layout stays stable across chromosome flips.
+    % column so the column layout stays stable across band/activation flips.
     if containsMbs && numSlots > 0
         num_mbs = size(antennaObjectMbs, 2);
         assert(num_mbs == size(mbsCache, 2), ...

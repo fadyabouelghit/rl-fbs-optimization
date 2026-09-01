@@ -11,11 +11,11 @@ function out = ppo_sinr_eval(tx, powerStatus, fbsBandFlags, mbsCapacityGenes, ..
 %   collectUsers     : 1 to also return the user-position matrix
 %   worldId          : key used at ppo_world_setup time (default 'default')
 %
-% In 'multi' mode this reproduces evaluatePopulation exactly: per-FBS antenna
-% selection by band flag, base-MBS slot expansion (coverage always on,
-% capacity gated by the gene), and same-band interference ids. In 'legacy'
-% mode it issues the original train_ppo.py call (no band arguments, scalar
-% antenna template) so historical agents replay bit-identically.
+% In 'multi' mode: per-FBS antenna selection by band flag, base-MBS slot
+% expansion (coverage always on, capacity gated by the gene), and same-band
+% interference ids. In 'legacy' mode it issues the original train_ppo.py call
+% (no band arguments, scalar antenna template) so historical agents replay
+% bit-identically.
 %
 % Returns a scalar struct of metrics -- cheap to marshal back to Python.
 
@@ -37,7 +37,7 @@ function out = ppo_sinr_eval(tx, powerStatus, fbsBandFlags, mbsCapacityGenes, ..
         genes = double(reshape(mbsCapacityGenes, 1, []));
         if isempty(genes); genes = zeros(1, world.numMbs); end
 
-        % Per-FBS antenna selection by band flag (evaluatePopulation:110-114).
+        % Per-FBS antenna selection by band flag.
         fbsAntennaEval = repmat(world.fbsAntenna(1), 1, nFbs);
         capMask = flags >= 0.5;
         if any(capMask)

@@ -10,7 +10,7 @@
 Examples:
     python -m ppo train --code 1-1-1 --timesteps 5000 --seed 0
     python -m ppo train --code 2-2-1 --band multi --fbs-band agent \\
-                        --mbs-capacity agent --reward ga_blend --n-envs 4
+                        --mbs-capacity agent --reward controlled_blend --n-envs 4
     python -m ppo eval --run latest --episodes 5
     python -m ppo eval --run run_039 --state 800,800,100,10.5,1
     python -m ppo plot --run latest
@@ -45,7 +45,9 @@ def _build_parser() -> argparse.ArgumentParser:
     t.add_argument("--band", default="legacy", choices=["legacy", "multi"])
     t.add_argument("--fbs-band", default="coverage", choices=["coverage", "capacity", "agent"])
     t.add_argument("--mbs-capacity", default="off", choices=["off", "on", "agent"])
-    t.add_argument("--reward", default=None, choices=["legacy_blend", "ga_blend", "sum_rate"])
+    # "ga_blend" is the pre-rename alias of "controlled_blend"; still accepted.
+    t.add_argument("--reward", default=None,
+                   choices=["legacy_blend", "controlled_blend", "sum_rate", "ga_blend"])
     t.add_argument("--reward-shaping", default=None,
                    choices=["none", "potential", "record", "potential_record"],
                    help="'potential': delta-objective; 'record': paid only for new episode "
@@ -55,7 +57,7 @@ def _build_parser() -> argparse.ArgumentParser:
                         "(default 0.5)")
     t.add_argument("--beta", type=float, default=None,
                    help="connectivity exponent in the cost function "
-                        "(historical runs and the GA use 0.8; dataclass default is 1.0)")
+                        "(historical runs use 0.8; dataclass default is 1.0)")
     t.add_argument("--fbs-weight", type=float, default=None,
                    help="weight on the FBS-share term (historical: 0.4)")
     t.add_argument("--reward-offset", type=float, default=None,

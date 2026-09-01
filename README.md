@@ -7,11 +7,6 @@ A PPO/SAC agent moves one or more FBSs over a service area and toggles their
 power and band, maximising a connectivity/power objective evaluated by real
 QuaDRiGa physics through MATLAB — or by a fast MATLAB-free analytic backend.
 
-This is the RL track. The genetic-algorithm track it shares its physics and
-objective with lives in a separate `genetic-algorithm-optimization`
-repository; the two agree on the same SINR evaluation so their results are
-directly comparable.
-
 ---
 
 ## Layout
@@ -28,8 +23,9 @@ secrets.env.example  template for machine-local paths (copy to secrets.env)
 
 Top-level scripts: `train_ppo.py` / `ppo_experiment.py` (compatibility shims
 for pre-package notebooks), `watch_run.py` (live training dashboard),
-`assess_models.py` (common-start-state policy comparison), `plot_trajectories.py`,
-`rerun_historical_rl.py`, `backfill_ledger.py`, and the `pilot_*.py` studies.
+`assess_models.py` (common-start-state policy comparison),
+`plot_trajectories.py` (rollout trajectory overlays), `rerun_historical_rl.py`,
+`backfill_ledger.py`, and the `pilot_*.py` studies.
 
 ## Two backends
 

@@ -1,5 +1,5 @@
 function freqs = band_frequencies()
-%BAND_FREQUENCIES Central source of antenna carrier frequencies for the GA.
+%BAND_FREQUENCIES Central source of antenna carrier frequencies.
 %
 % Every transmitter class (FBS, MBS, femto) shares the same band-id space:
 %   band id 0 -> coverage band (antenna row 1)
@@ -10,9 +10,7 @@ function freqs = band_frequencies()
 % interference accounting is incoherent. Edit this function in one place
 % and every entry point picks up the change automatically:
 %
-%   - optimize_base_station_ga.m  (FBS + MBS antennas)
-%   - ga_experiment.m             (FBS + MBS antennas in train + test)
-%   - femto_configs.m             (defaults for fcCoverage / fcCapacity)
+%   - ppo_world_setup.m           (FBS + MBS antenna templates)
 %
 % Output struct fields:
 %   coverage : centre frequency [Hz] for band-id 0 antennas (row 1)
