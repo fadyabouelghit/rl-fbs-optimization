@@ -1,12 +1,12 @@
 """Configuration layer for the PPO pipeline.
 
-Three levels of config, mirroring the GA harness (`ga_experiment.makeConfig`):
+Three levels of config:
 
 - ``WorldConfig`` / ``BandConfig`` / ``RewardConfig``: the physics scenario.
 - ``PPOParams``: SB3 hyperparameters + run budget.
 - ``ExperimentConfig``: the user-facing bundle. Built from an X-Y-Z code
-  (X = num FBS, Y = scenario id, Z = cost config id) plus overrides, exactly
-  like the GA side, with an extra ``band`` block for the multi-band world.
+  (X = num FBS, Y = scenario id, Z = cost config id) plus overrides, with a
+  ``band`` block for the multi-band world.
 
 Serialization is versioned: ``to_json_dict`` writes ``config_version: 2``.
 ``experiment_from_json_dict`` also accepts the v1 schema written by the old
@@ -21,7 +21,7 @@ from typing import Optional, Sequence, Tuple
 
 CONFIG_VERSION = 2
 
-# Per-FBS gene bounds (continuous part), matching the GA chromosome layout.
+# Per-FBS gene bounds (continuous part of the placement vector).
 FBS_Z_BOUNDS = (20.0, 150.0)
 FBS_POWER_BOUNDS = (7.0, 10.5)
 
@@ -29,13 +29,17 @@ FBS_POWER_BOUNDS = (7.0, 10.5)
 BAND_COVERAGE = 0
 BAND_CAPACITY = 1
 
+# Reward modes renamed in the standalone RL repo. Old names are still accepted
+# so ``experiment_config.json`` files written before the rename keep loading.
+REWARD_MODE_ALIASES = {"ga_blend": "controlled_blend"}
+
 
 # --------------------------------------------------------------------------- #
 # Reward
 # --------------------------------------------------------------------------- #
 @dataclass
 class RewardWeights:
-    """Weights of the connectivity-blend reward (mirrors evaluatePopulation)."""
+    """Weights of the connectivity-blend reward."""
 
     beta: float = 1.0
     gamma: float = 0.0
@@ -51,10 +55,11 @@ class RewardConfig:
     mode (the objective Φ):
       - ``legacy_blend``: the historical train_ppo.py formula (epsilon-padded
         terms, power normalized against SINREvaluation's total power output).
-      - ``ga_blend``: exact mirror of evaluatePopulation targetIdx=1
-        (controlled power = active FBS gene powers + gated macro-capacity
-        power, no epsilon padding). Use for apples-to-apples GA comparisons.
-      - ``sum_rate``: evaluatePopulation targetIdx=2 (sum spectral efficiency).
+      - ``controlled_blend``: bills only the power the agent actually
+        controls (active FBS gene powers + gated macro-capacity power) and
+        drops the epsilon padding, so the objective is a clean function of
+        the decision variables. Accepts the old name ``ga_blend``.
+      - ``sum_rate``: sum spectral efficiency over connected users.
 
     shaping (the training signal built from Φ):
       - ``none``: reward = Φ(s_t) each step (the historical dense signal —
@@ -76,7 +81,7 @@ class RewardConfig:
 
     ``potential`` and ``record`` need one extra backend evaluation at reset
     (to establish Φ(s_0)). Φ itself is always logged per step as
-    ``reward_objective`` so curves stay GA-comparable under every mode.
+    ``reward_objective`` so curves stay comparable across modes and runs.
 
     ``record_weight`` applies only to ``potential_record`` (ignored otherwise).
 
@@ -99,7 +104,8 @@ class RewardConfig:
     reward_gain: float = 1.0
 
     def __post_init__(self):
-        allowed = {"legacy_blend", "ga_blend", "sum_rate"}
+        self.mode = REWARD_MODE_ALIASES.get(self.mode, self.mode)
+        allowed = {"legacy_blend", "controlled_blend", "sum_rate"}
         if self.mode not in allowed:
             raise ValueError(f"reward mode {self.mode!r} not in {sorted(allowed)}")
         allowed_shaping = {"none", "potential", "record", "potential_record"}
@@ -116,7 +122,7 @@ class RewardConfig:
 # --------------------------------------------------------------------------- #
 @dataclass
 class WorldConfig:
-    """Static world geometry + radio parameters (the GA 'scenario')."""
+    """Static world geometry + radio parameters (the 'scenario')."""
 
     width: float = 2000.0
     height: float = 1500.0
@@ -154,7 +160,7 @@ class WorldConfig:
 
 @dataclass
 class BandConfig:
-    """Dual-band controls, mirroring the GA's gaControlsFbsBand /
+    """Dual-band controls, mirroring the harness' controlsFbsBand /
     gaControlsMbsCapacity switches.
 
     mode:

@@ -1,6 +1,6 @@
 """Run-directory management and efficient flat-file logging.
 
-Per-run directory layout (GA-style naming: ``ppo_runs/run_<ts>_<label>/``):
+Per-run directory layout (``ppo_runs/run_<ts>_<label>/``):
 
     experiment_config.json   full resolved config + provenance (git sha, ...)
     model.zip                final SB3 model
@@ -15,7 +15,7 @@ Per-run directory layout (GA-style naming: ``ppo_runs/run_<ts>_<label>/``):
     evals/<ts>/              post-hoc evaluation artifacts (ppo.evaluate)
 
 A one-row-per-run ledger is appended to ``training_log.csv`` at the repo
-root, mirroring the GA study ledgers.
+root, one row per finished run.
 """
 from __future__ import annotations
 

@@ -16,11 +16,10 @@ function info = ppo_world_setup(worldJson, worldId)
 %   scenario, map_mode  : QuaDRiGa scenario / power_map mode
 %   cache_dir           : on-disk cache folder for precompute_mbs_power_maps
 %   band_mode           : 'legacy' (single band, original train_ppo.py world)
-%                         or 'multi' (coverage+capacity, GA-parity world)
+%                         or 'multi' (coverage+capacity dual-band world)
 %
-% The world build mirrors optimize_base_station_ga.m exactly: pack_mbs_params
-% -> x<->y row swap -> precompute_mbs_power_maps, so cached maps are shared
-% with the GA harness for identical geometries.
+% Build order is pack_mbs_params -> x<->y row swap -> precompute_mbs_power_maps,
+% so the on-disk map cache is keyed by geometry and reused across runs.
 %
 % Returns a lightweight info struct (true MBS coordinates, band count, ...).
 
@@ -55,8 +54,8 @@ function info = ppo_world_setup(worldJson, worldId)
     [mbs_params, antennaObjectMbs, containsMbs, numBS] = ...
         pack_mbs_params(xs, ys, cfg.mbs_height, cfg.mbs_power, mbsAntenna);
 
-    % Legacy x<->y row swap -- must mirror optimize_base_station_ga.m so the
-    % cache keys and downstream consumers stay in the same (swapped) frame.
+    % Legacy x<->y row swap -- kept so the cache keys and every downstream
+    % consumer stay in the same (swapped) frame.
     tempForX = mbs_params(1, :);
     mbs_params(1, :) = mbs_params(2, :);
     mbs_params(2, :) = tempForX;
@@ -76,7 +75,7 @@ function info = ppo_world_setup(worldJson, worldId)
     world.W = cfg.width;
     world.H = cfg.height;
     % Swapped-frame rows; un-swapped at the SINREvaluation call site exactly
-    % like evaluatePopulation (arg mbs_x <- row 2 = true x).
+    % (arg mbs_x <- row 2 = true x).
     world.mbs_row1 = mbs_params(1, :);   % true y
     world.mbs_row2 = mbs_params(2, :);   % true x
     world.mbs_height = mbs_params(3, :);

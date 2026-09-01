@@ -10,8 +10,8 @@ same episode length, deterministic policy — differences are the policies.
 
     python assess_models.py --runs run_A run_B run_C --episodes 20
 
-Reference points for scenario 1 (2000x1500 m, 1 MBS) come from
-ga_exhaustive_results/: do-nothing = 694 users / 0 on the FBS, optimum = 722 /
+Reference points for scenario 1 (2000x1500 m, 1 MBS) come from an exhaustive
+grid sweep of the world: do-nothing = 694 users / 0 on the FBS, optimum = 722 /
 107. Their objective values depend on each run's cost weights, so they are
 recomputed per run rather than hardcoded.
 """

@@ -12,7 +12,7 @@ flicker ~50%/step under an untrained Gaussian policy, and on-policy PPO at
 This pilot keeps the COST/OBJECTIVE UNCHANGED (legacy_blend, beta 0.8,
 gamma 0, fbs_weight 0.4 — the per-step objective is still logged as
 ``reward_objective`` in steps.csv, directly comparable to the faithful runs,
-the GA, and the exhaustive sweeps) and changes only the *training machinery*:
+and the exhaustive sweeps) and changes only the *training machinery*:
 
     algo            PPO -> SAC        (replay reuse + auto-tuned entropy)
     reward signal   dense J -> delta-J (potential shaping; return telescopes
@@ -34,8 +34,8 @@ fine-tune stage runs exactly --timesteps additional steps):
     python pilot_211_structural.py --algo ppo                         # PPO control with the same structure
 
 The learning signal to watch is ``reward_objective`` (and final_fbs_connected)
-against the do-nothing baseline J=0.448 and the 1-FBS exhaustive optimum
-J=0.522 (`ga_exhaustive_results/`).
+against the do-nothing baseline J=0.448 and the 1-FBS brute-force optimum
+J=0.522 (exhaustive grid sweep of the world).
 """
 from __future__ import annotations
 

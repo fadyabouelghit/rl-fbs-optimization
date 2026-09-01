@@ -123,7 +123,7 @@ def test_legacy_blend_reward_matches_hand_computation(legacy_env_config, stub_re
     assert info["reward_norm_users"] == pytest.approx(norm_users)
 
 
-def test_ga_blend_reward_uses_controlled_power(multi_env_config, stub_result):
+def test_controlled_blend_reward_uses_controlled_power(multi_env_config, stub_result):
     env, _ = make_env(multi_env_config, stub_result)
     env.reset(seed=0)
     # All continuous genes drift; binaries: fbs0 on/coverage, fbs1 off,

@@ -162,7 +162,7 @@ class CsvEvalCallback(BaseCallback):
             "reward_sum": total_reward,
             "length": steps,
             # Absolute quality, independent of reward mode/scaling — this is
-            # the GA-comparable number. Episode returns are NOT comparable
+            # the cross-run comparable number. Episode returns are NOT comparable
             # across shaping modes, so never rank runs by reward_sum.
             "objective": objectives[-1] if objectives else None,
             "best_objective": max(objectives) if objectives else None,

@@ -5,7 +5,7 @@ could not show learning. An analytic-backend sweep showed 2-1-1 IS learnable
 and that the historical ent_coef=0.5 caps performance (~25% below ent~0.01).
 This pilot extends 2-1-1 on real MATLAB physics with tuned optimizer settings
 while keeping the COST/REWARD FUNCTION UNCHANGED (beta 0.8, gamma 0,
-fbs_weight 0.4), so the result is comparable to the faithful runs and the GA.
+fbs_weight 0.4), so the result stays comparable to the faithful runs.
 
 Changed vs. historical (optimizer only):
     ent_coef      0.5  -> 0.01   (let the policy actually converge)

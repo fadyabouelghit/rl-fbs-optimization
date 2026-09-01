@@ -1,6 +1,6 @@
 """Gymnasium environment for FBS placement driven by a SINR backend.
 
-Layout of the internal state vector (mirrors the GA chromosome):
+Layout of the internal state vector (one block per FBS):
 
     per FBS : [x, y, z, power, power_status(, band_flag)]   band flag only
                                                             when the agent
@@ -376,7 +376,7 @@ class FlyingBaseStationEnv(gym.Env):
         else:
             reward = scaled
         # NOTE: the RAW objective is logged, never the rescaled training
-        # signal — every cross-run/GA/exhaustive comparison depends on it.
+        # signal — every cross-run and baseline comparison depends on it.
         reward_terms = {**terms, "objective": float(potential)}
 
         total_frac = float(result.total_connected) / self._max_users_norm
@@ -456,7 +456,7 @@ class FlyingBaseStationEnv(gym.Env):
             base = (norm_users + w.epsilon) ** w.beta
             base *= ((1.0 - norm_power) + w.epsilon) ** w.gamma
             fbs_term = (fbs_share + w.epsilon) ** w.fbs_exponent
-        else:  # ga_blend — exact mirror of evaluatePopulation targetIdx=1
+        else:  # controlled_blend — bill only agent-controlled power
             active = blocks[:, 4] >= 0.5
             controlled_power = float(np.sum(blocks[active, 3]))
             if (

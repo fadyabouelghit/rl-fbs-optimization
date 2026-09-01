@@ -48,7 +48,7 @@ def multi_env_config() -> EnvConfig:
         num_fbs=2,
         world=small_world(num_mbs=2, mbs_locations=[(250.0, 400.0), (750.0, 400.0)]),
         band=BandConfig(mode="multi", fbs_band="agent", mbs_capacity="agent"),
-        reward=RewardConfig(mode="ga_blend", weights=RewardWeights(beta=0.8, gamma=0.2)),
+        reward=RewardConfig(mode="controlled_blend", weights=RewardWeights(beta=0.8, gamma=0.2)),
         max_episode_steps=10,
         action_scale=0.2,
     )

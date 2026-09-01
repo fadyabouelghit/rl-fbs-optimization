@@ -12,8 +12,9 @@ Usage:
 
 Reference values default to the scenario-1 world (2000x1500 m, 1 MBS):
 do-nothing J = 0.4480 (694 users connected, no FBS traffic) and the 1-FBS
-exhaustive optimum J = 0.5216 (722 connected, 107 on the FBS), both from
-ga_exhaustive_results/. Pass --baseline/--optimum for other scenarios.
+brute-force optimum J = 0.5216 (722 connected, 107 on the FBS), both from an
+exhaustive grid sweep of the world. Pass --baseline/--optimum for other
+scenarios.
 
 Ctrl-C to quit; quitting the viewer does not affect the training run.
 """
@@ -80,8 +81,8 @@ def objective(weights: dict, users: int, fbs: int, max_users: int,
     weights AND on the reward mode, because the two modes normalise power
     differently:
 
-      legacy_blend : norm_power = P / (FBS max)            + epsilon padding
-      ga_blend     : norm_power = P / (FBS max + macro)    , no padding
+      legacy_blend     : norm_power = P / (FBS max)         + epsilon padding
+      controlled_blend : norm_power = P / (FBS max + macro) , no padding
 
     Getting this wrong only shows up when gamma > 0 (at gamma = 0 the power
     term is 1 either way), which is exactly when it matters most.
@@ -90,9 +91,9 @@ def objective(weights: dict, users: int, fbs: int, max_users: int,
     gamma = weights.get("gamma", 0.0)
     w_fbs = weights.get("fbs_weight", 0.4)
     eta = weights.get("fbs_exponent", 1.0)
-    eps = weights.get("epsilon", 1e-4) if mode != "ga_blend" else 0.0
+    eps = weights.get("epsilon", 1e-4) if mode != "controlled_blend" else 0.0
 
-    denom = fbs_power_max + (macro_budget if mode == "ga_blend" else 0.0)
+    denom = fbs_power_max + (macro_budget if mode == "controlled_blend" else 0.0)
     norm_power = min(fbs_power / denom, 1.0) if denom > 0 else 0.0
     norm_users = min(users / max_users, 1.0)
     fbs_share = min(fbs / max(users, 1), 1.0)
@@ -132,12 +133,14 @@ def snapshot(run_dir: Path, baseline, optimum, prev: dict) -> dict:
 
     # Derive the reference objectives from THIS run's cost weights unless the
     # user pinned them. Reference outcomes (scenario 1, 2000x1500 m, 1 MBS):
-    # do-nothing 694 users / 0 on the FBS; 1-FBS exhaustive best 722 / 107.
+    # do-nothing 694 users / 0 on the FBS; 1-FBS brute-force best 722 / 107.
     reward_cfg = env.get("reward") or {}
     weights = reward_cfg.get("weights") or {}
     world = env.get("world") or {}
     max_users = int(world.get("num_users") or 1000)
+    # Runs written before the rename store the old mode name.
     mode = reward_cfg.get("mode", "legacy_blend")
+    mode = {"ga_blend": "controlled_blend"}.get(mode, mode)
     n_fbs = int(env.get("num_fbs") or 1)
     kw = dict(
         mode=mode,
@@ -211,7 +214,7 @@ def snapshot(run_dir: Path, baseline, optimum, prev: dict) -> dict:
     A("")
     beta = weights.get("beta", 1.0)
     A(f" DETERMINISTIC EVAL   (beta={beta}, fbs_weight={weights.get('fbs_weight', 0.4)})")
-    A(f"   do-nothing={baseline:.4f}   exhaustive-optimum={optimum:.4f}")
+    A(f"   do-nothing={baseline:.4f}   brute-force-optimum={optimum:.4f}")
     if not evals:
         first = int(ppo.get("eval_every") or 0)
         A(f"   (none yet — first eval at {first:,} steps)" if first else "   (eval disabled)")
