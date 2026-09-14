@@ -21,6 +21,10 @@ training_log.csv
 training_log.csv.bak
 *.log
 
+# Local experiment workspace: launchers, analysis scripts, results, logs.
+# Never tracked -- back it up separately.
+lab/
+
 # MATLAB
 *.asv
 *.mat
