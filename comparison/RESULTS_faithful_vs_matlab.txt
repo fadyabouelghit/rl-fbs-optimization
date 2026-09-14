@@ -1,0 +1,87 @@
+==============================================================================
+MATLAB : run_2026-08-19_23-46-16_1-1-1_1fbs1mbs_potrec10
+pyqd   : run_2026-09-03_00-22-07_1-1-1_1fbs1mbs_potrec10_half_faithful
+window : 13312 executed steps (MATLAB run continued to 25600)
+==============================================================================
+
+### 1. Seeded deterministic eval curve -- the headline learning signal
+
+  mean_objective
+       2000   MATLAB   0.417307   pyqd   0.417307   diff +0.00e+00
+       4000   MATLAB   0.416024   pyqd   0.416024   diff +0.00e+00
+       6000   MATLAB   0.412386   pyqd   0.412386   diff +0.00e+00
+       8000   MATLAB   0.432046   pyqd   0.432046   diff +0.00e+00
+      10000   MATLAB   0.433372   pyqd   0.433372   diff +0.00e+00
+      12000   MATLAB   0.437384   pyqd   0.437384   diff +0.00e+00
+     -> max |diff| = 0.000e+00
+
+  mean_best_objective
+       2000   MATLAB   0.417307   pyqd   0.417307   diff +0.00e+00
+       4000   MATLAB   0.422575   pyqd   0.422575   diff +0.00e+00
+       6000   MATLAB   0.424378   pyqd   0.424378   diff +0.00e+00
+       8000   MATLAB   0.439781   pyqd   0.439781   diff +0.00e+00
+      10000   MATLAB   0.444101   pyqd   0.444101   diff +0.00e+00
+      12000   MATLAB   0.447928   pyqd   0.447928   diff +0.00e+00
+     -> max |diff| = 0.000e+00
+
+  mean_total_connected
+       2000   MATLAB 668.333333   pyqd 668.333333   diff +0.00e+00
+       4000   MATLAB 677.333333   pyqd 677.333333   diff +0.00e+00
+       6000   MATLAB 675.666667   pyqd 675.666667   diff +0.00e+00
+       8000   MATLAB 699.000000   pyqd 699.000000   diff +0.00e+00
+      10000   MATLAB 701.000000   pyqd 701.000000   diff +0.00e+00
+      12000   MATLAB 698.333333   pyqd 698.333333   diff +0.00e+00
+     -> max |diff| = 0.000e+00
+
+  mean_fbs_connected
+       2000   MATLAB  25.000000   pyqd  25.000000   diff +0.00e+00
+       4000   MATLAB  15.333333   pyqd  15.333333   diff +0.00e+00
+       6000   MATLAB  11.000000   pyqd  11.000000   diff +0.00e+00
+       8000   MATLAB  22.000000   pyqd  22.000000   diff +0.00e+00
+      10000   MATLAB  22.333333   pyqd  22.333333   diff +0.00e+00
+      12000   MATLAB  32.000000   pyqd  32.000000   diff +0.00e+00
+     -> max |diff| = 0.000e+00
+
+  mean_reward
+       2000   MATLAB   0.024308   pyqd   0.024308   diff +0.00e+00
+       4000   MATLAB   0.028292   pyqd   0.028292   diff +0.00e+00
+       6000   MATLAB   0.026457   pyqd   0.026457   diff +0.00e+00
+       8000   MATLAB   0.061519   pyqd   0.061519   diff +0.00e+00
+      10000   MATLAB   0.067166   pyqd   0.067166   diff +0.00e+00
+      12000   MATLAB   0.075004   pyqd   0.075004   diff +0.00e+00
+     -> max |diff| = 0.000e+00
+
+### 2. Per-step training trajectory (all 13312 steps)
+
+  reward_objective   identical 13312/13312 (100.0%)   max|d|=0.000e+00   mean|d|=0.000e+00
+  total_connected    identical 13312/13312 (100.0%)   max|d|=0.000e+00   mean|d|=0.000e+00
+  fbs_connected      identical 13312/13312 (100.0%)   max|d|=0.000e+00   mean|d|=0.000e+00
+  total_power        identical 13312/13312 (100.0%)   max|d|=0.000e+00   mean|d|=0.000e+00
+  reward             identical 13312/13312 (100.0%)   max|d|=0.000e+00   mean|d|=0.000e+00
+
+### 3. FBS state trajectory (did the agent fly the same path?)
+
+  fbs0_x               identical 13312/13312   max|d|=0.000e+00
+  fbs0_y               identical 13312/13312   max|d|=0.000e+00
+  fbs0_height          identical 13312/13312   max|d|=0.000e+00
+  fbs0_power           identical 13312/13312   max|d|=0.000e+00
+  fbs0_power_status    identical 13312/13312   max|d|=0.000e+00
+
+### 4. Optimizer diagnostics
+
+  train/explained_variance     max|diff| over 12 updates = 0.000e+00
+  train/approx_kl              max|diff| over 12 updates = 0.000e+00
+  train/value_loss             max|diff| over 12 updates = 0.000e+00
+  train/entropy_loss           max|diff| over 12 updates = 0.000e+00
+
+### 5. Wall clock
+
+  MATLAB  25600 steps :    24463.1 s  (6.80 h)  1.05 steps/s
+  MATLAB  13312 steps (pro-rata):    12720.8 s  (3.53 h)
+  pyqd    13312 steps :     3548.6 s  (0.9857 h)  3.8 steps/s
+  -> speedup on the matched budget: 4x
+
+  MATLAB env setup : 9.71 s (MATLAB engine + QuaDRiGa)
+  pyqd   env setup : 0.02 s
+  backend recorded : pyqd | pyqd_channel 0.2.3
+  torch  2.9.1 -> 2.14.0 | sb3 2.7.0 -> 2.9.0

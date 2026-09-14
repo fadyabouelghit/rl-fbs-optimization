@@ -1,0 +1,313 @@
+==============================================================================
+cross-seed fast-vs-faithful replay
+==============================================================================
+  seed 7: run_2026-09-03_01-28-23_1-1-1_potrec10_seed7
+  seed 8: run_2026-09-03_01-29-23_1-1-1_potrec10_seed8
+  seed 9: run_2026-09-03_01-30-20_1-1-1_potrec10_seed9
+  numpy rng seed (sampling): 20260903   target states/seed: 78
+  world+band identical across seeds [7, 8, 9]: True
+  world: 2000.0x1500.0 m, num_users=1000, num_mbs=1, sinr_threshold=5.0, band=legacy
+  backends built once for all seeds in 0.0 s (fast_sampling: slow=False, fast=True)
+
+------------------------------------------------------------------------------
+SEED 7: 25600 logged steps, 90 states selected
+  gene ranges  x[0.000,2000.000] y[0.000,1500.000] h[20.000,150.000] p[7.000,10.500]
+  selected: active=70  inactive=20  min boundary dist in selection=0.000 m
+------------------------------------------------------------------------------
+  [OK  ] seed7 step     1 ts      1 x=1263.5176 y=1377.0970 h=122.7391 p= 7.9632 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | first-steps,min:fbs_connected
+  [OK  ] seed7 step     2 ts      2 x=1304.5988 y=1312.4275 h=120.5104 p= 7.9174 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | first-steps
+  [OK  ] seed7 step     3 ts      3 x=1235.8513 y=1237.4275 h=122.0654 p= 7.7424 st=1 | conn=549 fbs=0 sum_rate=2193.1363870312375 | slow   628.1 ms fast   3.61 ms | first-steps,min:fbs_connected|active  col=bit-equal
+  [OK  ] seed7 step     4 ts      4 x=1247.2285 y=1162.4275 h=122.3332 p= 7.6858 st=1 | conn=559 fbs=0 sum_rate=2164.4523004089815 | slow   500.8 ms fast   3.29 ms | first-steps  col=bit-equal
+  [OK  ] seed7 step     5 ts      5 x=1249.7234 y=1087.4275 h=123.3369 p= 7.8608 st=1 | conn=578 fbs=0 sum_rate=2147.6873021371116 | slow   503.5 ms fast   3.31 ms | first-steps  col=bit-equal
+  [OK  ] seed7 step    16 ts     16 x= 828.5045 y=1255.2761 h=150.0000 p= 7.4538 st=1 | conn=558 fbs=0 sum_rate=2330.9035655828075 | slow   497.1 ms fast   3.39 ms | max:fbs0_height,max:fbs0_height|active  col=bit-equal
+  [OK  ] seed7 step    35 ts     35 x=   0.0000 y= 853.6352 h=146.7071 p= 7.9569 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | min:fbs0_x
+  [OK  ] seed7 step     1 ts     41 x=1847.1069 y=   0.0000 h=126.0048 p= 9.7088 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | min:fbs0_y
+  [OK  ] seed7 step     9 ts     49 x=2000.0000 y=   0.0000 h=127.6635 p= 9.5305 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | max:fbs0_x
+  [OK  ] seed7 step    11 ts     51 x=1962.9979 y=   0.0000 h=129.9813 p= 9.7101 st=1 | conn=645 fbs=16 sum_rate=2877.063737684979 | slow   497.9 ms fast   3.38 ms | min:fbs0_y|active  col=bit-equal
+  [OK  ] seed7 step     1 ts    161 x=1269.4291 y=1500.0000 h= 46.0348 p= 7.6131 st=1 | conn=606 fbs=8 sum_rate=2532.989003986617 | slow   505.2 ms fast   3.38 ms | max:fbs0_y,max:fbs0_y|active  col=bit-equal
+  [OK  ] seed7 step     5 ts    205 x=   0.0000 y=   2.5845 h= 61.1851 p= 8.8893 st=1 | conn=649 fbs=29 sum_rate=3094.602191882862 | slow   492.4 ms fast   3.38 ms | min:fbs0_x|active  col=bit-equal
+  [OK  ] seed7 step    14 ts    254 x=2000.0000 y= 966.9986 h=106.7763 p= 9.4592 st=1 | conn=575 fbs=0 sum_rate=2441.8287234113104 | slow   493.7 ms fast   3.35 ms | max:fbs0_x|active  col=bit-equal
+  [OK  ] seed7 step    34 ts    274 x=1906.6821 y= 935.3096 h=100.1966 p= 8.9622 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed7 step    15 ts    295 x= 244.6227 y= 447.0216 h= 68.1173 p= 7.2042 st=1 | conn=630 fbs=65 sum_rate=2935.682793894929 | slow   489.1 ms fast   3.36 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    35 ts    315 x= 258.9207 y= 187.7221 h= 52.2722 p= 7.0000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | min:fbs0_power
+  [OK  ] seed7 step    35 ts    355 x=1410.4257 y= 333.9424 h=148.1679 p= 7.0000 st=1 | conn=614 fbs=20 sum_rate=2697.0695558184325 | slow   500.3 ms fast   3.30 ms | min:fbs0_power|active  col=bit-equal
+  [OK  ] seed7 step    30 ts    430 x= 715.0844 y= 456.9726 h= 92.7068 p= 8.3039 st=1 | conn=566 fbs=30 sum_rate=2454.576782448257 | slow   497.8 ms fast   3.95 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step     2 ts    442 x= 737.4692 y= 895.8790 h= 20.0000 p= 8.2134 st=1 | conn=518 fbs=1 sum_rate=2269.8148355897993 | slow   517.7 ms fast   3.43 ms | min:fbs0_height,min:fbs0_height|active  col=bit-equal
+  [OK  ] seed7 step    11 ts    731 x=2000.0000 y= 904.7240 h= 51.2244 p=10.5000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | max:fbs0_power
+  [OK  ] seed7 step    39 ts    839 x= 218.0682 y= 947.8573 h= 80.0590 p= 8.5107 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | status=0
+  [OK  ] seed7 step    10 ts    890 x= 202.9399 y=1500.0000 h=110.2348 p= 8.2670 st=1 | conn=604 fbs=23 sum_rate=2806.935095298775 | slow   524.0 ms fast   3.51 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed7 step    13 ts    893 x= 321.8051 y=1500.0000 h=114.0369 p= 8.0671 st=1 | conn=586 fbs=17 sum_rate=2721.10487832014 | slow   514.4 ms fast   3.52 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed7 step    32 ts    992 x= 210.2605 y= 789.7744 h= 82.8709 p=10.5000 st=1 | conn=577 fbs=60 sum_rate=2597.3641513091634 | slow   517.5 ms fast   3.59 ms | max:fbs0_power|active  col=bit-equal
+  [OK  ] seed7 step    12 ts   1212 x= 870.2964 y=1500.0000 h= 80.9815 p= 9.4923 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | edge:y=H
+  [OK  ] seed7 step     8 ts   1488 x=1268.4866 y= 501.5811 h=124.9784 p= 8.3285 st=1 | conn=540 fbs=3 sum_rate=2288.4478399621003 | slow   521.5 ms fast   3.54 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    31 ts   1671 x=   0.0000 y=   0.0000 h= 29.9062 p= 7.8104 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:y=0
+  [OK  ] seed7 step    34 ts   2554 x=2000.0000 y= 209.0689 h= 43.9840 p= 8.5916 st=1 | conn=665 fbs=25 sum_rate=3045.199744263345 | slow   514.6 ms fast   3.46 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    23 ts   2863 x=2000.0000 y=   0.0000 h=106.2390 p= 9.0619 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | corner<=2m
+  [OK  ] seed7 step    40 ts   3000 x=1292.6481 y= 805.2673 h= 32.2926 p= 7.6413 st=1 | conn=584 fbs=1 sum_rate=2230.6322451834894 | slow   524.1 ms fast   3.43 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    26 ts   3026 x= 685.2516 y=   0.0000 h= 53.9240 p= 8.0936 st=1 | conn=627 fbs=30 sum_rate=2883.8394331024065 | slow   522.0 ms fast   3.55 ms | edge:y=0  col=bit-equal
+  [OK  ] seed7 step    28 ts   3188 x=2000.0000 y= 919.7471 h= 59.5017 p= 9.0532 st=1 | conn=589 fbs=0 sum_rate=2551.664018142388 | slow   514.3 ms fast   3.54 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed7 step    40 ts   3680 x=1812.7258 y= 847.7260 h=147.6609 p= 7.3339 st=1 | conn=591 fbs=0 sum_rate=2507.395878899114 | slow   521.9 ms fast   3.58 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    39 ts   3999 x=1500.1002 y=1194.5414 h=150.0000 p= 7.3684 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | status=0
+  [OK  ] seed7 step    34 ts   4194 x=2000.0000 y= 560.6718 h= 22.2715 p= 8.4513 st=1 | conn=669 fbs=23 sum_rate=3053.555509438559 | slow   507.2 ms fast   3.33 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed7 step    37 ts   4317 x=1201.6484 y= 644.7428 h= 52.1706 p= 8.4779 st=1 | conn=530 fbs=0 sum_rate=2067.808211593402 | slow   498.9 ms fast   3.36 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step     2 ts   4602 x= 592.9250 y= 885.1802 h= 65.1112 p= 9.1295 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed7 step    26 ts   4706 x=1827.2122 y=   0.0000 h= 24.5532 p= 7.0515 st=1 | conn=690 fbs=25 sum_rate=3238.5807971382233 | slow   494.8 ms fast   3.32 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed7 step    21 ts   4781 x=   0.0000 y=  73.6949 h= 92.4903 p= 8.1002 st=1 | conn=645 fbs=28 sum_rate=3046.116916174945 | slow   494.4 ms fast   3.23 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed7 step    16 ts   5096 x=1585.7046 y=1333.3018 h=150.0000 p= 7.0000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | status=0
+  [OK  ] seed7 step    36 ts   5996 x= 598.6349 y=  69.4637 h= 86.4983 p= 9.7261 st=1 | conn=603 fbs=51 sum_rate=2692.3083045598714 | slow   497.2 ms fast   3.36 ms | status=1  col=bit-equal
+  [OK  ] seed7 step    34 ts   6154 x=1859.8025 y=   0.2665 h= 20.0000 p= 8.3917 st=1 | conn=693 fbs=25 sum_rate=3259.8980691491724 | slow   493.7 ms fast   3.32 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed7 step    16 ts   6216 x=1347.6807 y=   0.0000 h= 30.7741 p= 9.1429 st=1 | conn=684 fbs=48 sum_rate=3094.784261791172 | slow   495.8 ms fast   3.31 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed7 step    18 ts   6218 x=1431.6841 y=   0.0840 h= 29.7341 p= 9.2693 st=1 | conn=692 fbs=52 sum_rate=3129.7322242726873 | slow   492.8 ms fast   3.34 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed7 step    34 ts   6314 x=   0.0000 y=   0.0000 h= 20.0000 p= 9.6200 st=1 | conn=701 fbs=28 sum_rate=3311.8583456189963 | slow   489.9 ms fast   3.30 ms | corner<=2m  col=bit-equal
+  [OK  ] seed7 step    40 ts   6640 x= 326.7138 y= 781.9039 h= 55.8257 p= 9.7471 st=1 | conn=568 fbs=61 sum_rate=2583.5540570981066 | slow   496.4 ms fast   3.41 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step     9 ts   6689 x= 699.9296 y= 179.9163 h= 24.8941 p= 7.5884 st=1 | conn=678 fbs=49 sum_rate=3119.734535998854 | slow   494.1 ms fast   3.34 ms | status=1  col=bit-equal
+  [OK  ] seed7 step    11 ts   6731 x=   0.0000 y= 179.9633 h= 20.0000 p= 8.3318 st=1 | conn=709 fbs=42 sum_rate=3339.8355220567846 | slow   497.5 ms fast   3.31 ms | edge:x=0  col=bit-equal
+  [OK  ] seed7 step    38 ts   6918 x=   0.0000 y=   0.0000 h= 26.6951 p= 9.7286 st=1 | conn=702 fbs=41 sum_rate=3301.1934614409756 | slow   501.4 ms fast   3.40 ms | corner<=2m  col=bit-equal
+  [OK  ] seed7 step    22 ts   7582 x=   0.0000 y=  35.9675 h= 20.0000 p=10.3137 st=1 | conn=706 fbs=39 sum_rate=3331.1060248269896 | slow   504.0 ms fast   3.30 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed7 step    38 ts   8078 x=   0.0000 y=   0.0000 h= 20.0000 p= 7.0564 st=1 | conn=698 fbs=18 sum_rate=3303.2129597596813 | slow   490.6 ms fast   3.31 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed7 step     8 ts   8288 x=2000.0000 y= 581.0764 h= 20.0000 p= 7.0000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:x=W
+  [OK  ] seed7 step    22 ts   8462 x=  66.7485 y=   0.0000 h=109.0736 p= 7.3307 st=1 | conn=648 fbs=24 sum_rate=3054.706253887691 | slow   494.1 ms fast   3.37 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed7 step    35 ts   8475 x=   0.0000 y=   0.0000 h= 68.9263 p= 7.1354 st=1 | conn=645 fbs=15 sum_rate=3095.1107927168596 | slow   488.3 ms fast   3.34 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed7 step     6 ts   8686 x=1521.5992 y= 378.4814 h= 83.7220 p= 8.2561 st=1 | conn=607 fbs=42 sum_rate=2567.9503737626364 | slow   538.4 ms fast   3.80 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    14 ts   8854 x=2000.0000 y=1500.0000 h= 24.5875 p= 9.5383 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | edge:x=W
+  [OK  ] seed7 step    15 ts   8855 x=2000.0000 y=1500.0000 h= 28.3296 p= 9.7133 st=1 | conn=652 fbs=7 sum_rate=2960.8280435674997 | slow   552.8 ms fast   4.08 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed7 step    40 ts   9000 x=   0.0000 y=   0.0000 h= 91.9920 p= 7.7387 st=1 | conn=643 fbs=21 sum_rate=3052.018837437976 | slow   500.3 ms fast   3.36 ms | corner<=2m  col=bit-equal
+  [OK  ] seed7 step     2 ts  10922 x=2000.0000 y= 472.5040 h= 65.4673 p= 7.4955 st=1 | conn=641 fbs=14 sum_rate=2867.1685418297275 | slow   493.0 ms fast   3.39 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed7 step    18 ts  12058 x=2000.0000 y= 109.9823 h= 39.1012 p= 8.3690 st=1 | conn=669 fbs=21 sum_rate=3108.33849329694 | slow   490.0 ms fast   3.35 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed7 step    29 ts  12069 x=2000.0000 y=  67.1102 h= 20.0000 p= 8.1761 st=1 | conn=690 fbs=19 sum_rate=3244.9054197844816 | slow   492.4 ms fast   3.30 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed7 step    38 ts  12718 x=   0.0000 y=   0.0000 h= 20.0000 p=10.5000 st=1 | conn=700 fbs=33 sum_rate=3310.7277125702776 | slow   498.8 ms fast   3.56 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed7 step    40 ts  12760 x=   0.0000 y=   0.0000 h= 74.2541 p=10.1003 st=1 | conn=644 fbs=39 sum_rate=3031.8324024742133 | slow   497.2 ms fast   3.35 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed7 step    34 ts  12794 x= 581.0566 y=   0.0000 h= 20.0000 p= 9.6067 st=1 | conn=686 fbs=41 sum_rate=3223.7578374128725 | slow   496.5 ms fast   3.33 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed7 step    39 ts  12959 x=  30.8748 y=   0.0000 h= 20.0000 p=10.0524 st=1 | conn=705 fbs=37 sum_rate=3330.9785036333315 | slow   492.1 ms fast   3.29 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    13 ts  13693 x=   0.0000 y= 227.9113 h= 31.5754 p= 8.1093 st=1 | conn=691 fbs=51 sum_rate=3259.076831027823 | slow   488.4 ms fast   3.34 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    20 ts  15060 x=   0.0000 y= 751.9433 h= 20.0000 p= 7.1010 st=1 | conn=650 fbs=22 sum_rate=3145.6903450649615 | slow   487.0 ms fast   3.34 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed7 step    36 ts  15836 x=   0.0000 y= 277.5396 h= 20.0000 p= 8.2460 st=1 | conn=705 fbs=47 sum_rate=3327.7226102165705 | slow   488.4 ms fast   3.33 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed7 step    16 ts  16176 x=1395.9917 y=   0.0000 h= 57.7940 p= 8.2144 st=1 | conn=654 fbs=31 sum_rate=2890.0687717104397 | slow   501.3 ms fast   3.32 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed7 step     1 ts  16881 x= 897.5155 y= 293.0058 h=112.3560 p= 9.8826 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed7 step    31 ts  17071 x= 722.2778 y= 278.0756 h= 20.0000 p= 9.2287 st=1 | conn=678 fbs=62 sum_rate=3093.6072790988815 | slow   501.9 ms fast   3.52 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    22 ts  17462 x=   0.0000 y= 348.0421 h= 20.0000 p= 9.0508 st=1 | conn=701 fbs=53 sum_rate=3318.6544917665024 | slow   507.0 ms fast   3.51 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed7 step    19 ts  18979 x= 705.1328 y= 207.5873 h= 20.0000 p= 8.6123 st=1 | conn=686 fbs=59 sum_rate=3159.318495367789 | slow   615.9 ms fast   3.72 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    32 ts  19112 x=   0.0000 y= 304.4695 h= 20.7681 p=10.4145 st=1 | conn=698 fbs=59 sum_rate=3320.9122124303344 | slow   520.8 ms fast   3.52 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed7 step     7 ts  20967 x=   0.0000 y= 240.1452 h= 81.7520 p= 8.5699 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | edge:x=0
+  [OK  ] seed7 step     1 ts  21041 x= 438.0931 y=1500.0000 h=116.3401 p= 7.0696 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:y=H
+  [OK  ] seed7 step    30 ts  21150 x=   0.0000 y= 305.1443 h= 20.0000 p=10.2292 st=1 | conn=698 fbs=56 sum_rate=3322.3189896632084 | slow   514.0 ms fast   3.43 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed7 step    21 ts  21461 x=1187.5936 y=  74.5921 h= 20.0000 p= 8.5532 st=1 | conn=694 fbs=49 sum_rate=3205.5628480739474 | slow   519.1 ms fast   3.52 ms | status=1  col=bit-equal
+  [OK  ] seed7 step    16 ts  22536 x=1378.0765 y= 168.7463 h= 42.3772 p= 8.5403 st=1 | conn=660 fbs=56 sum_rate=2900.1583758857046 | slow   500.5 ms fast  28.00 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    15 ts  22895 x=1345.1621 y= 108.7275 h= 20.0000 p= 9.8810 st=1 | conn=697 fbs=62 sum_rate=3196.126251160166 | slow   610.8 ms fast   3.68 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step     2 ts  23762 x=1793.2000 y= 653.0925 h= 28.0960 p=10.0535 st=1 | conn=627 fbs=40 sum_rate=2660.8476442954607 | slow   533.8 ms fast   3.35 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    16 ts  24496 x=   0.0000 y= 312.6496 h= 37.0165 p= 7.8229 st=1 | conn=671 fbs=48 sum_rate=3191.1676915539683 | slow   490.5 ms fast   3.36 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed7 step    29 ts  24509 x=   0.0000 y= 343.6105 h= 20.0000 p= 9.2797 st=1 | conn=699 fbs=53 sum_rate=3316.2840588514528 | slow   489.8 ms fast   3.33 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed7 step    14 ts  24694 x= 354.6809 y= 489.0238 h= 26.6851 p=10.4399 st=1 | conn=670 fbs=132 sum_rate=3102.260964379817 | slow   500.0 ms fast   3.38 ms | max:fbs_connected,max:fbs_connected|active  col=bit-equal
+  [OK  ] seed7 step    19 ts  25379 x= 324.1375 y= 347.5212 h= 20.0000 p= 9.1048 st=1 | conn=699 fbs=96 sum_rate=3296.899806931805 | slow   489.5 ms fast   3.36 ms | uniform-random  col=bit-equal
+  [OK  ] seed7 step    36 ts  25596 x= 110.6908 y= 518.5719 h= 20.0000 p=10.0855 st=1 | conn=686 fbs=83 sum_rate=3300.6740168440174 | slow   491.3 ms fast   3.34 ms | last-steps  col=bit-equal
+  [OK  ] seed7 step    37 ts  25597 x= 144.7154 y= 451.3882 h= 20.0000 p=10.0421 st=1 | conn=701 fbs=99 sum_rate=3354.265173439758 | slow   492.6 ms fast   3.34 ms | last-steps  col=bit-equal
+  [OK  ] seed7 step    38 ts  25598 x= 130.7531 y= 377.2700 h= 20.0000 p= 9.9164 st=1 | conn=705 fbs=88 sum_rate=3387.1760925304725 | slow   489.7 ms fast   3.39 ms | last-steps  col=bit-equal
+  [OK  ] seed7 step    39 ts  25599 x= 206.6583 y= 424.9110 h= 20.0000 p= 9.8801 st=1 | conn=694 fbs=100 sum_rate=3337.6682525887973 | slow   510.1 ms fast   3.54 ms | last-steps  col=bit-equal
+  [OK  ] seed7 step    40 ts  25600 x= 306.6583 y= 430.7956 h= 23.1526 p= 9.8857 st=1 | conn=693 fbs=119 sum_rate=3248.497543898431 | slow   512.8 ms fast   3.55 ms | last-steps  col=bit-equal
+  seed 7: 90 states evaluated, 90 exact on all 8 fields, 0 state(s) with 0 mismatching field(s)
+
+------------------------------------------------------------------------------
+SEED 8: 25600 logged steps, 88 states selected
+  gene ranges  x[0.000,2000.000] y[0.000,1500.000] h[20.000,150.000] p[7.000,10.500]
+  selected: active=59  inactive=29  min boundary dist in selection=0.000 m
+------------------------------------------------------------------------------
+  [OK  ] seed8 step     1 ts      1 x= 672.2820 y=1500.0000 h= 61.6395 p= 9.9349 st=1 | conn=527 fbs=14 sum_rate=2284.085374374058 | slow   523.5 ms fast   3.52 ms | first-steps,max:fbs0_y,max:fbs0_y|active  col=bit-equal
+  [OK  ] seed8 step     2 ts      2 x= 772.2820 y=1434.5923 h= 63.5591 p= 9.7764 st=1 | conn=509 fbs=15 sum_rate=2151.822060534326 | slow   514.7 ms fast   3.48 ms | first-steps  col=bit-equal
+  [OK  ] seed8 step     3 ts      3 x= 787.3058 y=1491.1213 h= 57.0591 p= 9.6014 st=1 | conn=534 fbs=8 sum_rate=2253.8510886612194 | slow   512.7 ms fast   3.47 ms | first-steps  col=bit-equal
+  [OK  ] seed8 step     4 ts      4 x= 787.2086 y=1500.0000 h= 50.5591 p= 9.7764 st=1 | conn=546 fbs=8 sum_rate=2293.7854854861534 | slow   516.7 ms fast   3.47 ms | first-steps  col=bit-equal
+  [OK  ] seed8 step     5 ts      5 x= 687.2086 y=1500.0000 h= 44.0591 p= 9.7057 st=1 | conn=556 fbs=13 sum_rate=2412.7341658434784 | slow   519.1 ms fast   3.50 ms | first-steps  col=bit-equal
+  [OK  ] seed8 step     9 ts      9 x= 630.0439 y=1436.5419 h= 44.8183 p= 9.8448 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | min:fbs_connected
+  [OK  ] seed8 step    20 ts     60 x= 404.7405 y= 745.7498 h= 56.4893 p= 7.0000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | min:fbs0_power
+  [OK  ] seed8 step    30 ts     70 x= 504.5994 y= 637.2679 h= 59.5388 p= 7.0000 st=1 | conn=530 fbs=21 sum_rate=2493.3597716791173 | slow   518.6 ms fast   3.38 ms | min:fbs0_power|active  col=bit-equal
+  [OK  ] seed8 step    22 ts    102 x=1072.1583 y= 653.2123 h= 40.9817 p= 7.6105 st=1 | conn=556 fbs=0 sum_rate=2218.3779141063906 | slow   498.9 ms fast   3.37 ms | min:fbs_connected|active  col=bit-equal
+  [OK  ] seed8 step    34 ts    154 x=2000.0000 y=1105.3561 h= 89.7399 p= 8.6694 st=1 | conn=593 fbs=0 sum_rate=2556.955202646911 | slow   492.1 ms fast   3.31 ms | max:fbs0_x,max:fbs0_x|active  col=bit-equal
+  [OK  ] seed8 step    10 ts    170 x=1233.8663 y= 912.7096 h=150.0000 p= 7.0507 st=1 | conn=608 fbs=0 sum_rate=2298.862709902818 | slow   499.0 ms fast   3.38 ms | max:fbs0_height,max:fbs0_height|active  col=bit-equal
+  [OK  ] seed8 step     4 ts    204 x= 627.1791 y=   0.0000 h= 43.1345 p= 8.5261 st=1 | conn=641 fbs=40 sum_rate=2974.493762678385 | slow   535.2 ms fast   3.70 ms | min:fbs0_y,min:fbs0_y|active  col=bit-equal
+  [OK  ] seed8 step    34 ts    274 x= 565.7987 y=1316.7600 h=103.4865 p= 8.9490 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | uniform-random
+  [OK  ] seed8 step    15 ts    295 x= 815.1149 y= 688.6229 h= 55.9722 p= 8.2777 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed8 step    30 ts    430 x=1371.4800 y=1280.1570 h= 54.9765 p=10.1587 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | uniform-random
+  [OK  ] seed8 step    36 ts    436 x=1394.3485 y=1432.6052 h= 68.0570 p=10.5000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | max:fbs0_power
+  [OK  ] seed8 step     7 ts    487 x= 501.7475 y= 720.5640 h= 20.0000 p= 8.8589 st=1 | conn=557 fbs=42 sum_rate=2648.30909051875 | slow   553.3 ms fast   3.70 ms | min:fbs0_height,min:fbs0_height|active  col=bit-equal
+  [OK  ] seed8 step    24 ts    624 x= 164.9949 y=1117.4502 h= 98.5562 p=10.5000 st=1 | conn=574 fbs=49 sum_rate=2601.7119969289965 | slow   498.2 ms fast   3.41 ms | max:fbs0_power|active  col=bit-equal
+  [OK  ] seed8 step    27 ts    787 x=   0.0000 y= 429.2877 h= 49.1905 p= 8.3543 st=1 | conn=650 fbs=47 sum_rate=3087.9521699419183 | slow   491.9 ms fast   3.38 ms | min:fbs0_x,min:fbs0_x|active  col=bit-equal
+  [OK  ] seed8 step    13 ts   1013 x=1380.1348 y=1290.5177 h=120.6332 p= 9.0661 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | status=0
+  [OK  ] seed8 step     8 ts   1488 x=1441.6984 y=1143.7656 h= 36.2810 p= 7.0000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed8 step    21 ts   1861 x=1950.8438 y=1500.0000 h=115.7639 p= 8.5152 st=1 | conn=619 fbs=3 sum_rate=2738.6524009588034 | slow   501.7 ms fast   3.34 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed8 step    34 ts   2554 x= 202.8630 y=1017.9894 h= 46.0430 p= 8.7904 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed8 step    40 ts   3000 x=1800.7963 y=  82.5015 h= 96.0061 p=10.5000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed8 step    18 ts   3498 x= 125.4942 y=1500.0000 h= 28.4336 p= 7.8242 st=1 | conn=638 fbs=26 sum_rate=3094.6313669356637 | slow   497.6 ms fast   3.39 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed8 step    22 ts   3582 x=   0.0000 y=1500.0000 h=142.5522 p=10.5000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | edge:y=H
+  [OK  ] seed8 step    40 ts   3680 x=1854.8185 y=  53.9635 h=108.4515 p= 7.1253 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed8 step    39 ts   3999 x=   0.0000 y=   0.0000 h=112.0964 p= 8.1505 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:y=0
+  [OK  ] seed8 step    22 ts   4142 x= 739.6370 y=1128.6588 h=118.6226 p=10.2406 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | status=0
+  [OK  ] seed8 step    37 ts   4317 x=1914.0170 y=   0.0000 h= 20.0000 p= 7.0125 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed8 step     2 ts   4602 x= 228.8669 y=   0.0000 h= 30.3070 p= 8.3047 st=1 | conn=710 fbs=62 sum_rate=3334.28327820139 | slow   498.2 ms fast   3.37 ms | uniform-random  col=bit-equal
+  [OK  ] seed8 step     9 ts   4689 x=   0.0000 y=   0.0000 h= 69.8316 p= 8.1323 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | corner<=2m
+  [OK  ] seed8 step    19 ts   4819 x=   0.0000 y=1500.0000 h= 48.6624 p= 7.0000 st=1 | conn=632 fbs=11 sum_rate=3053.0453652238234 | slow   490.3 ms fast   3.35 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed8 step     5 ts   4925 x=2000.0000 y=1157.9349 h= 61.9574 p= 8.0891 st=1 | conn=603 fbs=0 sum_rate=2653.8146263272397 | slow   503.0 ms fast   3.52 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed8 step     8 ts   4928 x=2000.0000 y=1152.8912 h= 65.7279 p= 7.9141 st=1 | conn=605 fbs=0 sum_rate=2659.132039132842 | slow   511.8 ms fast   3.38 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed8 step     7 ts   5327 x=1206.2419 y=1500.0000 h=145.2741 p= 8.8834 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | status=0
+  [OK  ] seed8 step    35 ts   5515 x=   0.0000 y=   0.0000 h= 40.0792 p=10.3798 st=1 | conn=685 fbs=54 sum_rate=3222.573718518664 | slow   513.4 ms fast   3.47 ms | edge:y=0  col=bit-equal
+  [OK  ] seed8 step    23 ts   5583 x=   0.0000 y=1476.7338 h=119.1519 p= 7.0675 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:x=0
+  [OK  ] seed8 step    37 ts   5797 x=1665.1606 y=1313.9337 h= 58.8414 p= 7.9229 st=1 | conn=589 fbs=18 sum_rate=2472.5151225468485 | slow   517.5 ms fast   3.52 ms | status=1  col=bit-equal
+  [OK  ] seed8 step    32 ts   5992 x=   0.0000 y= 101.9162 h= 21.1052 p= 8.5521 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | boundary<=2m
+  [OK  ] seed8 step    26 ts   6466 x= 916.5879 y=   0.0000 h= 21.5217 p= 9.8288 st=1 | conn=700 fbs=51 sum_rate=3222.2122665863353 | slow   517.4 ms fast   3.34 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed8 step     4 ts   6484 x= 213.8659 y= 561.1969 h= 33.3989 p= 7.3827 st=1 | conn=652 fbs=82 sum_rate=3096.0175596117087 | slow   511.0 ms fast   3.51 ms | status=1  col=bit-equal
+  [OK  ] seed8 step    31 ts   6551 x= 179.7532 y=1500.0000 h=141.6953 p= 9.3606 st=1 | conn=600 fbs=23 sum_rate=2758.2954227366854 | slow   521.2 ms fast   3.50 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed8 step    13 ts   6573 x=2000.0000 y=1118.5195 h= 35.2562 p= 7.3224 st=1 | conn=621 fbs=2 sum_rate=2786.5361605126323 | slow   517.9 ms fast   3.34 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed8 step    40 ts   6640 x= 399.7113 y= 706.8135 h= 30.1313 p= 7.5700 st=1 | conn=563 fbs=41 sum_rate=2706.87767425822 | slow   499.8 ms fast   3.32 ms | uniform-random  col=bit-equal
+  [OK  ] seed8 step    34 ts   7594 x=   0.0000 y= 476.7401 h= 20.0000 p=10.4402 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | boundary<=2m
+  [OK  ] seed8 step    23 ts   7623 x=2000.0000 y= 873.9363 h= 43.8060 p=10.0593 st=1 | conn=586 fbs=0 sum_rate=2559.9388942815854 | slow   491.0 ms fast   3.36 ms | edge:x=W  col=bit-equal
+  [OK  ] seed8 step    33 ts   7673 x=2000.0000 y= 274.7434 h=150.0000 p= 8.7171 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:x=W
+  [OK  ] seed8 step    34 ts   7994 x=2000.0000 y=  72.3784 h= 22.9523 p= 7.8502 st=1 | conn=688 fbs=20 sum_rate=3230.2315242332497 | slow   495.5 ms fast   3.58 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed8 step    35 ts   8355 x=   0.0000 y=   0.0000 h= 34.3557 p= 9.9871 st=1 | conn=693 fbs=50 sum_rate=3259.1948846443506 | slow   510.6 ms fast   3.49 ms | corner<=2m  col=bit-equal
+  [OK  ] seed8 step    39 ts   8399 x= 744.6731 y=   0.0000 h= 23.6535 p= 7.3805 st=1 | conn=684 fbs=31 sum_rate=3186.634041621229 | slow   502.9 ms fast   3.39 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed8 step     6 ts   8686 x= 141.2558 y= 216.7147 h=146.8015 p= 8.0216 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed8 step    14 ts   9934 x=   0.0000 y=   0.0000 h= 83.5301 p= 8.8975 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | corner<=2m
+  [OK  ] seed8 step    31 ts  10151 x=2000.0000 y=   0.0000 h= 35.8993 p= 9.8360 st=1 | conn=673 fbs=21 sum_rate=3124.620687781684 | slow   499.7 ms fast   3.36 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed8 step    35 ts  10475 x=   0.0000 y=   0.0000 h= 28.3929 p=10.4923 st=1 | conn=702 fbs=47 sum_rate=3297.4227104110632 | slow   495.7 ms fast   3.38 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed8 step    31 ts  11031 x= 926.7545 y=   0.0000 h= 20.0000 p= 8.8598 st=1 | conn=697 fbs=45 sum_rate=3241.956614551151 | slow   503.1 ms fast   3.34 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed8 step    31 ts  11551 x=   0.0000 y=  49.2627 h= 20.0000 p= 9.0917 st=1 | conn=704 fbs=33 sum_rate=3326.3846583020077 | slow   493.1 ms fast   3.35 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed8 step    23 ts  11583 x= 723.3323 y=   0.0000 h= 20.0000 p= 8.9972 st=1 | conn=687 fbs=36 sum_rate=3201.8543800085936 | slow   493.6 ms fast   3.32 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed8 step    26 ts  11826 x=2000.0000 y=   0.0000 h= 28.3103 p= 8.6212 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | boundary<=2m
+  [OK  ] seed8 step    21 ts  12461 x=   0.0000 y=   0.0000 h= 52.9908 p= 8.2934 st=1 | conn=656 fbs=25 sum_rate=3136.8483825794583 | slow   497.6 ms fast   3.32 ms | corner<=2m  col=bit-equal
+  [OK  ] seed8 step    39 ts  12959 x=   0.0000 y= 164.3950 h= 20.0000 p=10.1367 st=1 | conn=709 fbs=50 sum_rate=3349.9191091856674 | slow   489.9 ms fast   3.32 ms | uniform-random  col=bit-equal
+  [OK  ] seed8 step    31 ts  13591 x=   0.0000 y= 104.6101 h= 20.0000 p= 9.0074 st=1 | conn=707 fbs=39 sum_rate=3338.9768773539645 | slow   489.6 ms fast   3.33 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed8 step    13 ts  13693 x=  57.7942 y= 130.8927 h= 55.4769 p= 9.3405 st=1 | conn=661 fbs=59 sum_rate=3131.8041924917825 | slow   491.5 ms fast   3.34 ms | uniform-random  col=bit-equal
+  [OK  ] seed8 step    25 ts  13865 x=   0.0000 y=   0.0000 h= 43.3479 p= 9.1556 st=1 | conn=675 fbs=38 sum_rate=3195.6577411992366 | slow   492.9 ms fast   3.33 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed8 step    39 ts  14279 x=  81.2349 y=   0.0000 h= 20.0000 p= 9.8694 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | boundary<=2m
+  [OK  ] seed8 step     3 ts  14563 x= 865.6336 y=1500.0000 h=150.0000 p= 8.6955 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:y=H
+  [OK  ] seed8 step    22 ts  14942 x=   0.0000 y=  64.4734 h= 32.4767 p=10.1146 st=1 | conn=695 fbs=56 sum_rate=3278.3774778868037 | slow   489.4 ms fast   3.32 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed8 step    14 ts  15534 x=   2.0727 y=   0.0000 h= 51.4253 p= 9.0839 st=1 | conn=665 fbs=37 sum_rate=3152.19643372232 | slow   495.2 ms fast   3.32 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed8 step     1 ts  16881 x= 159.1021 y=1434.3252 h=147.2048 p= 9.8756 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed8 step    31 ts  17071 x= 547.1960 y= 146.6597 h= 20.0000 p= 9.3251 st=1 | conn=688 fbs=60 sum_rate=3227.427983751064 | slow   504.1 ms fast   3.36 ms | uniform-random  col=bit-equal
+  [OK  ] seed8 step    28 ts  17668 x=   0.0000 y= 233.3106 h= 26.2273 p= 9.6905 st=1 | conn=697 fbs=59 sum_rate=3297.475012822281 | slow   511.7 ms fast   3.54 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed8 step    31 ts  17671 x=   0.0000 y=  61.4169 h= 22.7089 p= 9.9008 st=1 | conn=704 fbs=42 sum_rate=3325.926818558176 | slow   508.2 ms fast   3.52 ms | edge:x=0  col=bit-equal
+  [OK  ] seed8 step    19 ts  18979 x=1682.0979 y= 271.9885 h= 37.7231 p= 7.1384 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | uniform-random
+  [OK  ] seed8 step    13 ts  19213 x=   0.0000 y=   0.0000 h= 20.0000 p= 8.3829 st=1 | conn=702 fbs=25 sum_rate=3312.3949556490534 | slow   512.3 ms fast   3.39 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed8 step    36 ts  21556 x= 189.5877 y= 228.3719 h= 20.0000 p=10.5000 st=1 | conn=718 fbs=89 sum_rate=3448.0563040142115 | slow   513.3 ms fast   3.46 ms | status=1  col=bit-equal
+  [OK  ] seed8 step    33 ts  22393 x=   0.0000 y=   0.0000 h= 20.0000 p= 8.1567 st=1 | conn=699 fbs=22 sum_rate=3305.966117770773 | slow   493.8 ms fast   3.25 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed8 step    16 ts  22536 x=   0.0000 y= 167.5857 h= 63.2433 p=10.5000 st=1 | conn=651 fbs=60 sum_rate=3063.0265066206157 | slow   572.7 ms fast   3.67 ms | uniform-random  col=bit-equal
+  [OK  ] seed8 step    15 ts  22895 x=  19.0109 y= 424.8779 h= 20.0000 p= 9.8213 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | uniform-random
+  [OK  ] seed8 step    34 ts  23034 x= 355.1231 y= 463.3265 h= 33.0306 p=10.5000 st=1 | conn=663 fbs=132 sum_rate=3049.429798896846 | slow   545.5 ms fast   3.92 ms | max:fbs_connected,max:fbs_connected|active  col=bit-equal
+  [OK  ] seed8 step    30 ts  23510 x=   0.0000 y= 255.5734 h= 20.0000 p=10.5000 st=1 | conn=702 fbs=55 sum_rate=3333.902496359796 | slow   496.3 ms fast   3.38 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed8 step    40 ts  23520 x=   0.0000 y= 279.4828 h= 20.0000 p=10.5000 st=1 | conn=695 fbs=54 sum_rate=3318.775208735149 | slow   488.1 ms fast   3.29 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed8 step     2 ts  23762 x=1129.1619 y= 366.7018 h= 22.9223 p= 9.7423 st=1 | conn=659 fbs=63 sum_rate=2847.6008544033793 | slow   504.4 ms fast   3.38 ms | uniform-random  col=bit-equal
+  [OK  ] seed8 step    19 ts  25379 x= 316.3665 y= 284.5551 h= 20.0000 p=10.3807 st=1 | conn=702 fbs=99 sum_rate=3345.4381383332707 | slow   488.7 ms fast   3.34 ms | uniform-random  col=bit-equal
+  [OK  ] seed8 step    36 ts  25596 x= 322.4226 y= 215.3351 h= 22.2022 p= 9.9133 st=1 | conn=702 fbs=88 sum_rate=3342.8708400576697 | slow   495.2 ms fast   3.31 ms | last-steps  col=bit-equal
+  [OK  ] seed8 step    37 ts  25597 x= 397.4409 y= 179.1878 h= 20.0000 p= 9.8313 st=1 | conn=700 fbs=77 sum_rate=3316.2754074387394 | slow   494.2 ms fast   3.33 ms | last-steps  col=bit-equal
+  [OK  ] seed8 step    38 ts  25598 x= 481.7014 y= 116.8893 h= 20.0000 p= 9.8244 st=1 | conn=698 fbs=67 sum_rate=3286.2719434392534 | slow   492.8 ms fast   3.34 ms | last-steps  col=bit-equal
+  [OK  ] seed8 step    39 ts  25599 x= 381.7014 y= 143.1945 h= 20.0000 p= 9.8221 st=1 | conn=701 fbs=72 sum_rate=3335.380076483205 | slow   492.6 ms fast   3.34 ms | last-steps  col=bit-equal
+  [OK  ] seed8 step    40 ts  25600 x= 426.5280 y= 151.1768 h= 20.0000 p= 9.6876 st=1 | conn=700 fbs=72 sum_rate=3306.9984512108003 | slow   491.9 ms fast   3.30 ms | last-steps  col=bit-equal
+  seed 8: 88 states evaluated, 88 exact on all 8 fields, 0 state(s) with 0 mismatching field(s)
+
+------------------------------------------------------------------------------
+SEED 9: 25600 logged steps, 89 states selected
+  gene ranges  x[0.000,2000.000] y[0.000,1500.000] h[20.000,150.000] p[7.000,10.500]
+  selected: active=61  inactive=28  min boundary dist in selection=0.000 m
+------------------------------------------------------------------------------
+  [OK  ] seed9 step     1 ts      1 x=1741.3269 y= 407.0587 h= 97.6304 p= 9.7325 st=1 | conn=610 fbs=54 sum_rate=2565.5008663224835 | slow   497.1 ms fast   3.41 ms | first-steps  col=bit-equal
+  [OK  ] seed9 step     2 ts      2 x=1841.3269 y= 332.0587 h= 98.1926 p= 9.6726 st=1 | conn=627 fbs=47 sum_rate=2699.1795798492694 | slow   500.0 ms fast   3.40 ms | first-steps  col=bit-equal
+  [OK  ] seed9 step     3 ts      3 x=1932.1154 y= 280.6182 h= 98.9344 p= 9.4976 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | first-steps,min:fbs_connected
+  [OK  ] seed9 step     4 ts      4 x=2000.0000 y= 254.0923 h= 99.5805 p= 9.4711 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | first-steps,max:fbs0_x
+  [OK  ] seed9 step     5 ts      5 x=2000.0000 y= 235.2522 h= 95.5135 p= 9.2961 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | first-steps
+  [OK  ] seed9 step     6 ts      6 x=2000.0000 y= 310.2522 h= 98.1550 p= 9.2191 st=1 | conn=634 fbs=22 sum_rate=2808.110678630259 | slow   503.6 ms fast   3.42 ms | max:fbs0_x|active  col=bit-equal
+  [OK  ] seed9 step    14 ts     14 x=2000.0000 y=   0.0000 h=106.4020 p= 8.7791 st=1 | conn=657 fbs=12 sum_rate=2950.235847957646 | slow   509.9 ms fast   3.48 ms | min:fbs0_y,min:fbs0_y|active  col=bit-equal
+  [OK  ] seed9 step     1 ts     41 x=1810.3597 y=1215.5905 h=141.4709 p= 7.0000 st=1 | conn=601 fbs=0 sum_rate=2601.761899007183 | slow   516.4 ms fast   3.54 ms | min:fbs0_power,min:fbs0_power|active,min:fbs_connected|active  col=bit-equal
+  [OK  ] seed9 step     3 ts     43 x=2000.0000 y=1103.7650 h=150.0000 p= 7.0000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | max:fbs0_height
+  [OK  ] seed9 step    23 ts     63 x=1686.8882 y= 961.1306 h=150.0000 p= 7.2881 st=1 | conn=590 fbs=0 sum_rate=2408.1736602958736 | slow   520.7 ms fast   3.57 ms | max:fbs0_height|active  col=bit-equal
+  [OK  ] seed9 step     6 ts     86 x= 938.2716 y= 833.4644 h= 20.0000 p= 7.0000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | min:fbs0_height
+  [OK  ] seed9 step    22 ts    102 x=1290.3596 y=1197.7396 h= 20.0000 p= 7.0659 st=1 | conn=629 fbs=3 sum_rate=2576.1500668898043 | slow   520.3 ms fast   3.50 ms | min:fbs0_height|active  col=bit-equal
+  [OK  ] seed9 step    20 ts    260 x= 962.4979 y=1500.0000 h= 31.2776 p= 7.8490 st=1 | conn=622 fbs=8 sum_rate=2652.9560935404083 | slow   522.5 ms fast   3.47 ms | max:fbs0_y,max:fbs0_y|active  col=bit-equal
+  [OK  ] seed9 step    34 ts    274 x= 773.7292 y=1441.5983 h= 40.1123 p= 7.6059 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed9 step    15 ts    295 x=1257.7126 y=1201.7072 h= 28.6767 p= 7.6845 st=1 | conn=599 fbs=0 sum_rate=2347.8702975741553 | slow   516.9 ms fast   3.35 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    13 ts    373 x=1770.4880 y=1409.6246 h= 51.5755 p=10.5000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | max:fbs0_power
+  [OK  ] seed9 step    17 ts    377 x=1773.4060 y=1448.9862 h= 41.4540 p=10.5000 st=1 | conn=611 fbs=18 sum_rate=2595.897476831524 | slow   490.2 ms fast   3.42 ms | max:fbs0_power|active  col=bit-equal
+  [OK  ] seed9 step    30 ts    430 x= 948.3938 y=  94.6760 h= 47.2302 p= 8.0715 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed9 step    15 ts    535 x=   0.0000 y= 842.3113 h= 87.6172 p= 9.9616 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | min:fbs0_x
+  [OK  ] seed9 step    22 ts    542 x=   0.0000 y= 991.6117 h=105.9704 p=10.3826 st=1 | conn=570 fbs=22 sum_rate=2646.612230447073 | slow   494.2 ms fast   3.38 ms | min:fbs0_x|active  col=bit-equal
+  [OK  ] seed9 step    40 ts    800 x=1845.1849 y= 233.3143 h= 34.9634 p= 8.9608 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | status=0
+  [OK  ] seed9 step     9 ts   1289 x= 700.7674 y=1500.0000 h= 63.9394 p= 7.8131 st=1 | conn=570 fbs=9 sum_rate=2493.393088195794 | slow   497.8 ms fast   3.35 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed9 step     7 ts   1447 x=2000.0000 y=1384.4969 h= 79.7074 p= 7.9752 st=1 | conn=626 fbs=5 sum_rate=2771.094663436089 | slow   517.6 ms fast   3.44 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed9 step     8 ts   1488 x=1343.6538 y= 326.8200 h=146.8097 p= 8.1345 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed9 step     8 ts   2248 x=1732.5831 y=1500.0000 h= 47.0593 p= 7.8967 st=1 | conn=635 fbs=11 sum_rate=2745.6429071425855 | slow   500.3 ms fast   3.49 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed9 step    23 ts   2303 x=   0.0000 y=   0.0000 h=100.6260 p= 7.9092 st=1 | conn=645 fbs=21 sum_rate=3046.0946284115016 | slow   496.6 ms fast   3.52 ms | corner<=2m  col=bit-equal
+  [OK  ] seed9 step    34 ts   2554 x=  75.9396 y= 994.1199 h= 88.1087 p= 7.8928 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed9 step    25 ts   2905 x=1472.7957 y=1500.0000 h= 57.1506 p= 8.5409 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:y=H
+  [OK  ] seed9 step    40 ts   3000 x=1612.6506 y= 941.9186 h=138.6053 p=10.1381 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed9 step    33 ts   3113 x=  76.2958 y=   0.0000 h= 73.4444 p= 7.7402 st=1 | conn=648 fbs=30 sum_rate=3079.1093322373054 | slow   511.6 ms fast   3.73 ms | edge:y=0  col=bit-equal
+  [OK  ] seed9 step     4 ts   3204 x=2000.0000 y= 291.9249 h=140.5072 p= 8.8012 st=1 | conn=636 fbs=17 sum_rate=2840.6192466575126 | slow   550.4 ms fast   3.61 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed9 step     2 ts   3562 x= 512.4358 y= 629.6229 h= 63.8450 p= 9.9917 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | status=0
+  [OK  ] seed9 step    40 ts   3680 x=1235.5620 y=1196.6216 h= 62.1993 p= 9.0641 st=1 | conn=506 fbs=0 sum_rate=1889.1572777277083 | slow   534.4 ms fast   3.38 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    37 ts   4317 x=1268.9501 y= 634.7885 h= 98.1323 p=10.5000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | uniform-random
+  [OK  ] seed9 step     2 ts   4602 x= 434.1490 y=1074.0051 h= 21.2627 p= 8.1638 st=1 | conn=550 fbs=27 sum_rate=2665.6834971246153 | slow   497.7 ms fast   3.36 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    39 ts   4639 x=   0.0000 y= 878.9896 h= 20.0000 p= 9.1292 st=1 | conn=638 fbs=24 sum_rate=3093.093364754436 | slow   498.2 ms fast   3.53 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed9 step    27 ts   4667 x= 609.7833 y=   0.0000 h= 27.4335 p= 7.6243 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | status=0
+  [OK  ] seed9 step    31 ts   4831 x=2000.0000 y= 767.3173 h= 26.5259 p=10.5000 st=1 | conn=615 fbs=12 sum_rate=2742.864169484962 | slow   512.2 ms fast   3.60 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed9 step    38 ts   4998 x=1553.5684 y=   0.0000 h= 97.6096 p= 9.0794 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | edge:y=0
+  [OK  ] seed9 step    12 ts   5332 x=   0.0000 y=1020.5369 h= 73.6724 p= 9.4695 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | edge:x=0
+  [OK  ] seed9 step     6 ts   5526 x=2000.0000 y= 498.1265 h=145.7029 p= 7.7727 st=1 | conn=627 fbs=4 sum_rate=2802.6759107080525 | slow   506.2 ms fast   3.54 ms | edge:x=W  col=bit-equal
+  [OK  ] seed9 step    10 ts   5530 x=2000.0000 y= 411.1191 h=150.0000 p= 8.1746 st=1 | conn=634 fbs=11 sum_rate=2828.675017813688 | slow   513.4 ms fast   3.46 ms | edge:x=W  col=bit-equal
+  [OK  ] seed9 step    16 ts   5536 x=2000.0000 y= 634.7031 h=134.4936 p= 8.8582 st=1 | conn=597 fbs=2 sum_rate=2626.680703199496 | slow   507.9 ms fast   3.34 ms | edge:x=W|active  col=bit-equal
+  [OK  ] seed9 step    16 ts   6016 x=   0.0000 y=  27.1876 h= 34.7546 p=10.5000 st=1 | conn=691 fbs=55 sum_rate=3257.91849285818 | slow   512.4 ms fast   3.51 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed9 step    21 ts   6141 x= 202.6523 y=   0.0000 h= 34.4237 p= 7.7541 st=1 | conn=703 fbs=57 sum_rate=3301.5929892114127 | slow   518.9 ms fast   3.47 ms | status=1  col=bit-equal
+  [OK  ] seed9 step    40 ts   6640 x=   0.0000 y= 346.7791 h= 22.5030 p= 7.5250 st=1 | conn=700 fbs=49 sum_rate=3301.777591128427 | slow   508.5 ms fast   3.35 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step     2 ts   6882 x= 920.9801 y= 744.3921 h=148.3943 p= 9.6446 st=1 | conn=492 fbs=0 sum_rate=1906.2101340267295 | slow   515.5 ms fast   3.81 ms | status=1  col=bit-equal
+  [OK  ] seed9 step    26 ts   6946 x=   0.0000 y= 595.0206 h= 86.4944 p= 9.2935 st=1 | conn=608 fbs=36 sum_rate=2849.215898392985 | slow   554.3 ms fast   3.86 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed9 step    11 ts   7011 x=1411.9622 y=1500.0000 h=138.5722 p= 7.1797 st=1 | conn=602 fbs=5 sum_rate=2601.9646175525313 | slow   538.6 ms fast   3.34 ms | edge:y=H|active  col=bit-equal
+  [OK  ] seed9 step    23 ts   8263 x=   0.0000 y= 257.8317 h= 69.3282 p= 9.4284 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | boundary<=2m
+  [OK  ] seed9 step     4 ts   8364 x=1020.2292 y=   0.0000 h= 28.3892 p= 8.5570 st=1 | conn=696 fbs=50 sum_rate=3165.8829893418506 | slow   501.6 ms fast   3.31 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed9 step    22 ts   8502 x=   0.0000 y=   0.0000 h= 66.7704 p= 8.6137 st=1 | conn=642 fbs=24 sum_rate=3070.9362642196265 | slow   495.8 ms fast   3.32 ms | corner<=2m  col=bit-equal
+  [OK  ] seed9 step     6 ts   8686 x= 348.8281 y= 166.6980 h=124.4413 p= 7.2448 st=1 | conn=651 fbs=51 sum_rate=2991.186359190139 | slow   500.8 ms fast   3.36 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    14 ts  10214 x= 306.1680 y=1500.0000 h=140.7823 p= 7.0474 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.07 ms | edge:y=H
+  [OK  ] seed9 step    30 ts  10230 x=   0.0000 y=1500.0000 h=150.0000 p= 7.0000 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | corner<=2m
+  [OK  ] seed9 step    19 ts  10459 x=   0.0000 y=   0.0000 h= 25.1806 p=10.5000 st=1 | conn=703 fbs=43 sum_rate=3307.9346337597167 | slow   495.7 ms fast   3.34 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed9 step    31 ts  10511 x= 475.6292 y=   0.0000 h= 30.0200 p= 7.7424 st=1 | conn=682 fbs=41 sum_rate=3206.361947136791 | slow   493.1 ms fast   3.32 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed9 step    37 ts  11037 x= 342.5164 y= 444.4697 h= 32.3259 p=10.5000 st=1 | conn=666 fbs=131 sum_rate=3083.5167896723315 | slow   494.4 ms fast   3.35 ms | max:fbs_connected,max:fbs_connected|active  col=bit-equal
+  [OK  ] seed9 step    31 ts  11231 x=   0.0000 y=   0.0000 h= 20.0000 p=10.2494 st=1 | conn=700 fbs=31 sum_rate=3310.462609595293 | slow   495.4 ms fast   3.32 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed9 step    30 ts  12390 x= 591.9768 y=   0.0000 h= 22.2159 p= 9.6893 st=1 | conn=687 fbs=45 sum_rate=3207.718142783052 | slow   498.1 ms fast   3.35 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed9 step    29 ts  12429 x= 756.4208 y=   0.0000 h= 24.2752 p=10.5000 st=1 | conn=683 fbs=58 sum_rate=3141.2805364341025 | slow   498.6 ms fast   3.33 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed9 step    39 ts  12959 x=1100.6626 y=  45.3163 h= 20.0000 p=10.1971 st=1 | conn=704 fbs=57 sum_rate=3224.544302766421 | slow   493.6 ms fast   3.33 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    14 ts  13374 x=1275.5431 y=   0.0000 h= 45.4186 p= 9.2543 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | boundary<=2m
+  [OK  ] seed9 step    13 ts  13693 x= 736.7314 y= 207.5581 h= 87.2071 p=10.4757 st=1 | conn=607 fbs=77 sum_rate=2550.9082304618246 | slow   503.1 ms fast   3.57 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    38 ts  13958 x=   0.0000 y=   0.0000 h= 20.0000 p= 8.7013 st=1 | conn=701 fbs=26 sum_rate=3310.7830458684007 | slow   511.7 ms fast   3.44 ms | corner<=2m  col=bit-equal
+  [OK  ] seed9 step    39 ts  14359 x=   0.0000 y=   0.0000 h= 20.0000 p= 9.4846 st=1 | conn=702 fbs=28 sum_rate=3313.7870849303563 | slow   537.4 ms fast   3.90 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed9 step    22 ts  15422 x= 319.5632 y=   0.0000 h= 22.5275 p= 9.8398 st=1 | conn=707 fbs=63 sum_rate=3348.1906164782513 | slow   554.1 ms fast   4.75 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed9 step    33 ts  16273 x=   0.0000 y= 227.4017 h= 20.0000 p=10.3004 st=1 | conn=704 fbs=54 sum_rate=3337.441683965432 | slow   512.0 ms fast   3.46 ms | boundary<=2m  col=bit-equal
+  [OK  ] seed9 step    37 ts  16437 x= 792.0039 y=   0.0000 h= 20.0000 p=10.4761 st=1 | conn=692 fbs=50 sum_rate=3200.410560481558 | slow   504.1 ms fast   3.36 ms | edge:y=0|active  col=bit-equal
+  [OK  ] seed9 step    36 ts  16796 x=   0.0000 y=  49.0186 h= 20.0000 p= 7.5489 st=1 | conn=704 fbs=27 sum_rate=3322.6305392517506 | slow   487.5 ms fast   3.30 ms | boundary<=2m|active  col=bit-equal
+  [OK  ] seed9 step     1 ts  16881 x= 537.8738 y=1203.0763 h= 66.3803 p= 7.4313 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed9 step    31 ts  17071 x=  78.9173 y= 201.2012 h= 20.0000 p=10.3647 st=1 | conn=707 fbs=65 sum_rate=3384.028291660003 | slow   490.7 ms fast   3.33 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step     8 ts  17488 x=   0.0000 y= 981.3254 h= 23.5508 p= 8.7753 st=1 | conn=634 fbs=27 sum_rate=3062.7078576082195 | slow   488.1 ms fast   3.35 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed9 step    12 ts  18972 x=   0.0000 y= 169.9519 h= 20.0000 p= 8.7725 st=1 | conn=711 fbs=44 sum_rate=3346.8485822045145 | slow   487.5 ms fast   3.24 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed9 step    19 ts  18979 x= 357.6603 y= 102.1039 h= 20.0000 p= 9.4895 st=1 | conn=707 fbs=69 sum_rate=3363.782675090569 | slow   492.0 ms fast   3.34 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    31 ts  19271 x=   0.0000 y=  90.3086 h= 20.0000 p=10.0278 st=1 | conn=707 fbs=42 sum_rate=3341.8945795444756 | slow   484.5 ms fast   3.33 ms | edge:x=0  col=bit-equal
+  [OK  ] seed9 step    32 ts  19312 x=   0.0000 y=   1.3517 h= 20.0000 p=10.4999 st=1 | conn=700 fbs=33 sum_rate=3311.036193650584 | slow   487.7 ms fast   3.24 ms | corner<=2m|active  col=bit-equal
+  [OK  ] seed9 step    27 ts  21307 x= 606.0081 y=  12.6572 h= 20.0000 p=10.3483 st=1 | conn=690 fbs=49 sum_rate=3220.1143143659524 | slow   493.7 ms fast   3.36 ms | status=1  col=bit-equal
+  [OK  ] seed9 step    16 ts  22536 x= 128.1449 y= 437.4895 h= 20.0000 p=10.0608 st=1 | conn=700 fbs=94 sum_rate=3356.677154004987 | slow   593.3 ms fast   3.97 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    15 ts  22895 x= 368.7415 y= 408.8817 h= 20.0000 p= 9.9927 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.08 ms | uniform-random
+  [OK  ] seed9 step    27 ts  23427 x=   0.0000 y= 291.7973 h= 20.0000 p= 9.6702 st=1 | conn=702 fbs=53 sum_rate=3328.2459112420675 | slow   552.5 ms fast   3.47 ms | edge:x=0|active  col=bit-equal
+  [OK  ] seed9 step     2 ts  23762 x= 191.9059 y=1089.7841 h= 98.9838 p= 8.0799 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | uniform-random
+  [OK  ] seed9 step     7 ts  24087 x=   0.0000 y= 943.2594 h= 20.0000 p= 7.8750 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | boundary<=2m
+  [OK  ] seed9 step    19 ts  25379 x= 321.0739 y= 326.5501 h= 20.0000 p=10.4965 st=1 | conn=696 fbs=106 sum_rate=3313.535032228982 | slow   505.9 ms fast   3.34 ms | uniform-random  col=bit-equal
+  [OK  ] seed9 step    36 ts  25596 x= 405.3690 y= 526.4068 h= 20.0000 p=10.1199 st=1 | conn=643 fbs=94 sum_rate=3026.123065562916 | slow   497.7 ms fast   3.38 ms | last-steps  col=bit-equal
+  [OK  ] seed9 step    37 ts  25597 x= 436.0939 y= 451.4068 h= 20.0000 p=10.2547 st=0 | conn=694 fbs=0 sum_rate=3290.549556988466 | slow     0.1 ms fast   0.06 ms | last-steps
+  [OK  ] seed9 step    38 ts  25598 x= 415.6867 y= 425.9533 h= 20.0000 p=10.4297 st=1 | conn=672 fbs=110 sum_rate=3135.7667904535847 | slow   507.2 ms fast   3.33 ms | last-steps  col=bit-equal
+  [OK  ] seed9 step    39 ts  25599 x= 315.6867 y= 356.9560 h= 20.0000 p=10.5000 st=1 | conn=692 fbs=108 sum_rate=3299.432895589334 | slow   510.4 ms fast   3.49 ms | last-steps  col=bit-equal
+  [OK  ] seed9 step    40 ts  25600 x= 415.6867 y= 281.9560 h= 22.9505 p=10.5000 st=1 | conn=693 fbs=106 sum_rate=3234.2401834004436 | slow   507.6 ms fast   3.38 ms | last-steps  col=bit-equal
+  seed 9: 89 states evaluated, 89 exact on all 8 fields, 0 state(s) with 0 mismatching field(s)
+
+==============================================================================
+SUMMARY
+==============================================================================
+  states tested        : 267  (active FBS: 190, inactive: 77)
+  all-8-fields exact   : 267
+  states with any diff : 0
+  FBS power columns compared bitwise: 190, bit-equal: 190, max relative deviation: 0.000e+00
+  per-evaluation wall clock
+    faithful, FBS active   : n=190 mean=507.40 ms median=500.33 ms min=484.53 max=628.13
+    fast,     FBS active   : n=190 mean=3.56 ms median=3.38 ms min=3.23 max=28.00
+    faithful, FBS inactive : n=77 mean=0.08 ms median=0.08 ms min=0.06 max=0.13
+    fast,     FBS inactive : n=77 mean=0.06 ms median=0.06 ms min=0.06 max=0.08
+    speed ratio (active, mean): 142.4x
+  DISCREPANCIES: none -- every field of every state matched exactly.

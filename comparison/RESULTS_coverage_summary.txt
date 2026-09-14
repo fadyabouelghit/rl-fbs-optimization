@@ -1,0 +1,26 @@
+tested (seed, timestep) pairs parsed from the probe logs: 891
+  seed 0:  15477 active rows in 5153 cells |  66 tested active states in  61 cells
+  seed 1:  13890 active rows in 4870 cells |  60 tested active states in  54 cells
+  seed 2:  14177 active rows in 5463 cells |  62 tested active states in  55 cells
+  seed 3:  16101 active rows in 5724 cells |  64 tested active states in  60 cells
+  seed 4:  13952 active rows in 5310 cells |  66 tested active states in  59 cells
+  seed 5:  13775 active rows in 4993 cells |  65 tested active states in  62 cells
+  seed 6:  15779 active rows in 5160 cells |  57 tested active states in  55 cells
+  seed 7:  14800 active rows in 4996 cells |  70 tested active states in  66 cells
+  seed 8:  13838 active rows in 4975 cells |  59 tested active states in  55 cells
+  seed 9:  16253 active rows in 5399 cells |  61 tested active states in  58 cells
+
+binning: x/100 m  y/100 m  height/10 m  power/0.5 dB
+logged steps across the 10 seeds : 256000
+  of which the FBS is active     : 148042
+distinct active cells VISITED    : 21826
+distinct active cells TESTED     : 492 (2.3% of visited cells)
+untested visited cells           : 21334
+
+Read this as a bound, not a reassurance: cell coverage is 'did any state
+in this region get checked', and the honest claim is a stratified sample,
+not an exhaustive proof. What makes the sample carry further than its size
+suggests is structural: _grid_nodes() takes no arguments -- the receiver
+positions the two paths disagree about are a constant of the world, not a
+function of the FBS state -- so the FBS state can only enter through the
+elementwise LOS arithmetic and the tx_power scale factor.
