@@ -128,6 +128,30 @@ def _isolate_ledger(tmp_path, monkeypatch):
     yield
 
 
+@pytest.fixture(autouse=True)
+def _isolate_pyqd_cache(tmp_path, monkeypatch):
+    """Keep pyqd power maps out of the repo's cache_pyqd_maps/.
+
+    Any test that builds a pyqd backend without naming a cache dir (e.g. via
+    ``make_backend``, whose default backend is now 'pyqd') would otherwise
+    write megabyte-scale .npz files into the working tree, and parallel runs
+    would race on them. tests/test_pyqd_backend.py additionally passes an
+    explicit module-scoped directory, since module-scoped fixtures are built
+    before this function-scoped one can patch anything.
+
+    Both halves are needed. The attribute patch covers this process; the
+    environment variable covers SubprocVecEnv workers, which are spawned fresh
+    and re-import ``ppo.paths`` (where PPO_PYQD_CACHE_DIR is read) rather than
+    inheriting anything monkeypatched here.
+    """
+    import ppo.pyqd_bridge as pb
+
+    cache = tmp_path / "pyqd_maps"
+    monkeypatch.setattr(pb, "PYQD_CACHE_DIR", cache)
+    monkeypatch.setenv("PPO_PYQD_CACHE_DIR", str(cache))
+    yield
+
+
 def pytest_collection_modifyitems(config, items):
     if os.environ.get("PPO_MATLAB_TESTS") == "1":
         return

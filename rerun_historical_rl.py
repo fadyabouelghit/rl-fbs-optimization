@@ -35,6 +35,7 @@ from dataclasses import dataclass
 
 from ppo import ExperimentConfig, train
 from ppo.config import CONFIGS, BandConfig, RewardConfig, RewardWeights
+from ppo.matlab_bridge import BACKEND_CHOICES, DEFAULT_BACKEND
 
 SEED = 0                    # fresh fixed seed; the originals' seeds are lost
 MAX_EPISODE_STEPS = 30
@@ -121,7 +122,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--batch", choices=["1FBS", "2FBS", "all"], default="1FBS")
-    p.add_argument("--backend", choices=["matlab", "analytic"], default="matlab")
+    p.add_argument("--backend", default=DEFAULT_BACKEND, choices=list(BACKEND_CHOICES),
+                   help="physics backend (default: %(default)s -- QuaDRiGa in-process, no MATLAB)")
     p.add_argument("--action-scale", type=float, default=0.5,
                    help="action_scale for all configs except the last two (default 0.5)")
     p.add_argument("--action-scale-last2", type=float, default=None,
@@ -138,7 +140,11 @@ def main():
     last2 = args.action_scale_last2
     if last2 is None:
         needs_last2 = any(s.code in ("2-2-1", "2-2-2") for s in specs)
-        if needs_last2 and args.backend == "matlab":
+        # Any REAL-physics backend deserves this rail, not just 'matlab'.
+        # Before pyqd existed, "real physics" and "matlab" were the same thing;
+        # now the default is pyqd, and keying the check on the literal would
+        # have silently disarmed it for every default invocation.
+        if needs_last2 and args.backend != "analytic":
             raise SystemExit(
                 "Refusing to launch: codes 2-2-1 / 2-2-2 need --action-scale-last2 "
                 "(their action_scale is unrecoverable and you flagged them as different)."

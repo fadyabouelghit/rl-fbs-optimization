@@ -1,11 +1,20 @@
 # Python dependencies for the PPO pipeline (ppo/ package).
-# The venv currently in use satisfies these; matlabengine must match the
-# installed MATLAB release (R2024b -> 24.2.*).
+# Everything below the "optional" line is needed only by the legacy `matlab`
+# backend; the default `pyqd` backend computes the same QuaDRiGa physics
+# in-process and needs no MATLAB installation at all.
 numpy>=2.0
 pandas>=2.2
 matplotlib>=3.9
 gymnasium>=1.0
 stable-baselines3>=2.6
 torch>=2.5
-matlabengine==24.2.*
+pyqd-channel>=0.2.3
 pytest>=8.0
+h5py>=3.11          # reads MATLAB v7.3 map caches in the pyqd oracle test
+scipy>=1.14         # pulled in by pyqd-channel's scenario tables
+
+# --- optional: only for `--backend matlab` ---------------------------------
+# matlabengine must match the installed MATLAB release (R2024b -> 24.2.*).
+# Uncomment on a machine that has MATLAB + QuaDRiGa; `pip install -r
+# requirements.txt` deliberately no longer fails on machines that do not.
+# matlabengine==24.2.*

@@ -8,12 +8,15 @@ logging (see run_logging.py for the artifact layout). Key properties:
   changing ``n_envs`` changes the rollout interleaving (like any other
   hyperparameter), which is why parallelism is opt-in.
 - **Parallelism**: ``exp.ppo.n_envs > 1`` uses SubprocVecEnv; each worker
-  process starts its own MATLAB engine (~1-2 GB each). Worker i is seeded
-  ``seed + i`` by SB3.
+  process builds its own backend. On ``pyqd`` that is a few hundred MB of
+  numpy and a one-off MBS power-map precompute per worker -- which is why
+  those maps are memoised on disk (``cache_pyqd_maps/``), so only the very
+  first worker of the very first run pays for them. On ``matlab`` it is a
+  full engine (~1-2 GB each). Worker i is seeded ``seed + i`` by SB3.
 - **In-training eval**: with ``exp.ppo.eval_every > 0`` a dedicated eval env
   runs seeded deterministic episodes and tracks ``best_model.zip``. For
-  ``n_envs == 1`` it shares the training env's MATLAB backend (no second
-  engine); for parallel training it builds its own.
+  ``n_envs == 1`` it shares the training env's backend (no second world
+  build, no second MATLAB engine); for parallel training it builds its own.
 """
 from __future__ import annotations
 
@@ -30,7 +33,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNorm
 from .callbacks import CheckpointEveryCallback, CsvEvalCallback, EnvInfoLoggingCallback
 from .config import EnvConfig, ExperimentConfig
 from .env import FlyingBaseStationEnv, state_labels
-from .matlab_bridge import MatlabSession
+from .matlab_bridge import DEFAULT_BACKEND, MatlabSession
 from .run_logging import RunLogger
 from .runs import find_model_path, model_class_for, resolve_run
 
@@ -75,7 +78,8 @@ def _build_model(exp: ExperimentConfig, vec_env):
 
 def _make_worker_env(env_config: EnvConfig, backend_kind: str, monitor_path: str):
     """Top-level factory (picklable) for SubprocVecEnv workers. The backend
-    (and its MATLAB engine, if any) is created inside the worker process."""
+    (its world build, power-map cache and MATLAB engine, if any) is created
+    inside the worker process; only the backend NAME crosses the pickle."""
     def _init():
         env = FlyingBaseStationEnv(env_config, backend_kind=backend_kind)
         return Monitor(env, filename=monitor_path, allow_early_resets=True)
@@ -84,14 +88,17 @@ def _make_worker_env(env_config: EnvConfig, backend_kind: str, monitor_path: str
 
 def train(
     exp: ExperimentConfig,
-    backend: str = "matlab",
+    backend: str = DEFAULT_BACKEND,
     session: Optional[MatlabSession] = None,
     run_dir: Optional[Path] = None,
     resume_from: Optional[str | Path] = None,
 ) -> Path:
     """Train PPO under `exp`; returns the run directory.
 
-    backend      : 'matlab' (real physics) or 'analytic' (fast stand-in).
+    backend      : 'pyqd' (default: real QuaDRiGa physics in-process),
+                   'pyqd-fast' (same numbers, ~190x cheaper per FBS map),
+                   'matlab' (the same physics via MATLAB/QuaDRiGa), or
+                   'analytic' (fast, uncalibrated stand-in).
     session      : optional pre-started MatlabSession to reuse (n_envs == 1).
     resume_from  : run name/path whose model.zip seeds the optimizer state;
                    training continues into a NEW run dir (provenance recorded).
@@ -129,7 +136,7 @@ def train(
             )
             vec_env = DummyVecEnv([lambda: monitored])
             if exp.ppo.eval_every > 0:
-                # Shares the training backend — no second MATLAB engine.
+                # Shares the training backend — no second world build.
                 eval_env = FlyingBaseStationEnv(exp.env, backend=train_env.backend)
         else:
             factories = [
