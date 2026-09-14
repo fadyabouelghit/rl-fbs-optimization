@@ -5,11 +5,17 @@ Quick start (see PPO_PIPELINE.md for the full guide):
     from ppo import ExperimentConfig, train, evaluate_run
 
     exp = ExperimentConfig.from_code("1-1-1", total_timesteps=5000, seed=0)
-    run_dir = train(exp)                      # real MATLAB physics
+    run_dir = train(exp)                      # real QuaDRiGa physics, no MATLAB
     report = evaluate_run(run_dir, episodes=3)
 
-    # fast, MATLAB-free iteration on pipeline / env mechanics:
+    # same physics, bit-identical, ~190x cheaper per FBS power map:
+    run_dir = train(exp, backend="pyqd-fast")
+
+    # fast (uncalibrated) iteration on pipeline / env mechanics:
     run_dir = train(exp, backend="analytic")
+
+    # the original MATLAB/QuaDRiGa stack, still selectable as the oracle:
+    run_dir = train(exp, backend="matlab")
 
 CLI: ``python -m ppo --help``  (train / eval / plot / list / info / smoke).
 """
@@ -30,6 +36,8 @@ from .env import FlyingBaseStationEnv, state_labels
 from .evaluate import EvalReport, evaluate_run, flatten_states, rollout_episode
 from .matlab_bridge import (
     AnalyticSinrBackend,
+    BACKEND_CHOICES,
+    DEFAULT_BACKEND,
     MatlabSession,
     MatlabSinrBackend,
     SinrResult,
@@ -37,11 +45,13 @@ from .matlab_bridge import (
     get_shared_session,
     make_backend,
 )
+from .pyqd_bridge import PyqdSinrBackend
 from .runs import list_evals, list_runs, load_run, resolve_run
 from .train import train
 
 __all__ = [
     "AnalyticSinrBackend",
+    "BACKEND_CHOICES",
     "BandConfig",
     "CONFIGS",
     "EnvConfig",
@@ -51,11 +61,13 @@ __all__ = [
     "MatlabSession",
     "MatlabSinrBackend",
     "PPOParams",
+    "PyqdSinrBackend",
     "RewardConfig",
     "RewardWeights",
     "SCENARIOS",
     "SinrResult",
     "WorldConfig",
+    "DEFAULT_BACKEND",
     "close_shared_session",
     "evaluate_run",
     "experiment_from_json_dict",

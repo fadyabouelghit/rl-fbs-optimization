@@ -13,8 +13,16 @@
 # Run from the repo root:
 #     bash scripts/run_40step_arms.sh
 #
-# Sequential on purpose — one MATLAB backend at a time.
-# ~6.8 h per run + ~5 min eval, ~21 h total.
+# Sequential on purpose — one physics backend at a time.
+# --backend is pinned explicitly: these arms must stay comparable with the
+# runs they sit alongside, so they must not silently follow the CLI default
+# if it ever moves again. 'pyqd' is numerically the MATLAB physics without
+# MATLAB; switch to 'pyqd-fast' (bit-identical, ~160x faster) to cut the
+# wall clock from ~21 h to minutes.
+# ~6.8 h per run + ~5 min eval, ~21 h total. Those numbers are for this
+# script's 2000x1500 world (--code 1-1-1) only: on the 4000x3000 scenario-2
+# world one 'pyqd' map costs ~2.4 s and ~3.4 GB transiently (~0.2 steps/s),
+# so a 25k-step run there is ~35 h and 'pyqd-fast' stops being optional.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -22,6 +30,7 @@ PY=./venv/bin/python
 
 COMMON=(
   --code 1-1-1
+  --backend pyqd
   --reward legacy_blend
   --record-weight 1.0
   --beta 1.0

@@ -1,0 +1,35 @@
+====================================================================================
+MATLAB reference eval: 20260820_063908  (5 episodes, seed 1000, deterministic)
+====================================================================================
+ episode  reward_sum  final_total_connected  final_fbs_connected  final_mbs_connected  final_total_power  final_avg_rate  final_sum_rate  best_total_connected
+       0    0.280310                    700                  110                  590               10.5        4.796413     3357.489429                   719
+       1    0.136787                    700                  112                  588               10.5        4.786445     3350.511482                   702
+       2    0.311763                    699                  110                  589               10.5        4.794412     3351.293850                   714
+       3    0.128589                    700                  112                  588               10.5        4.786451     3350.515885                   706
+       4    0.137386                    699                  111                  588               10.5        4.792124     3349.694800                   715
+
+====================================================================================
+full_seed0_faithful: run_2026-09-03_11-05-55_1-1-1_potrec10_seed0_faithful / 20260903_132824
+====================================================================================
+  reward_sum               identical 5/5   max|d|=0.000e+00
+  final_total_connected    identical 5/5   max|d|=0.000e+00
+  final_fbs_connected      identical 5/5   max|d|=0.000e+00
+  final_mbs_connected      identical 5/5   max|d|=0.000e+00
+  final_total_power        identical 5/5   max|d|=0.000e+00
+  final_avg_rate           identical 0/5   max|d|=7.395e-09
+  final_sum_rate           identical 0/5   max|d|=5.169e-06
+  best_total_connected     identical 5/5   max|d|=0.000e+00
+  -> worst deviation vs MATLAB across all eval columns: 5.169e-06
+
+====================================================================================
+full_seed0_fast: run_2026-09-03_01-21-22_1-1-1_potrec10_seed0 / 20260903_132819
+====================================================================================
+  reward_sum               identical 5/5   max|d|=0.000e+00
+  final_total_connected    identical 5/5   max|d|=0.000e+00
+  final_fbs_connected      identical 5/5   max|d|=0.000e+00
+  final_mbs_connected      identical 5/5   max|d|=0.000e+00
+  final_total_power        identical 5/5   max|d|=0.000e+00
+  final_avg_rate           identical 0/5   max|d|=7.395e-09
+  final_sum_rate           identical 0/5   max|d|=5.169e-06
+  best_total_connected     identical 5/5   max|d|=0.000e+00
+  -> worst deviation vs MATLAB across all eval columns: 5.169e-06

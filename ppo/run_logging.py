@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Optional
 
 from .config import ExperimentConfig
+from .matlab_bridge import DEFAULT_BACKEND
 from .paths import LEDGER_PATH, REPO_ROOT, RUNS_DIR, ensure_dir
 
 
@@ -50,7 +51,17 @@ def git_sha() -> Optional[str]:
 
 def package_versions() -> dict:
     versions = {"python": sys.version.split()[0], "platform": platform.platform()}
-    for pkg in ("numpy", "gymnasium", "stable_baselines3", "torch", "pandas"):
+    # pyqd_channel is the physics itself under the default backend, so its
+    # version belongs in provenance alongside the learning stack: a change
+    # there moves every number in the run.
+    for pkg in (
+        "numpy",
+        "gymnasium",
+        "stable_baselines3",
+        "torch",
+        "pandas",
+        "pyqd_channel",
+    ):
         try:
             versions[pkg] = __import__(pkg).__version__
         except Exception:
@@ -163,7 +174,7 @@ class RunLogger:
         exp: ExperimentConfig,
         runs_root: Path = RUNS_DIR,
         run_dir: Optional[Path] = None,
-        backend_kind: str = "matlab",
+        backend_kind: str = DEFAULT_BACKEND,
         flush_every: int = 256,
     ):
         self.exp = exp

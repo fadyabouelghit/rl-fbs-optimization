@@ -1,15 +1,25 @@
 """SINR evaluation backends.
 
-Two interchangeable backends drive the gym environment:
+Three interchangeable backends drive the gym environment:
 
-- ``MatlabSinrBackend``: the real physics. Builds the world once MATLAB-side
-  (``ppo_world_setup.m``) and evaluates steps through ``ppo_sinr_eval.m``, so
-  each step marshals only scalars across the engine boundary (the legacy
-  implementation shipped the full MBS map cache both ways every step).
+- ``PyqdSinrBackend`` (``ppo/pyqd_bridge.py``): the default. The same QuaDRiGa
+  physics, computed in-process through the ``pyqd-channel`` package -- a
+  validated Python port of QuaDRiGa's coverage-map subset, agreeing with the
+  MATLAB maps to ~3e-6 dB. No MATLAB, no QuaDRiGa install, no engine startup.
+  It is a deliberate port of ``SINREvaluation.m``, quirks included; read its
+  module docstring before changing anything numerical.
+- ``MatlabSinrBackend``: the original physics. Builds the world once
+  MATLAB-side (``ppo_world_setup.m``) and evaluates steps through
+  ``ppo_sinr_eval.m``, so each step marshals only scalars across the engine
+  boundary (the legacy implementation shipped the full MBS map cache both ways
+  every step). Kept working and selectable as the reference oracle.
 - ``AnalyticSinrBackend``: a fast, deterministic, MATLAB-free stand-in with
   the same interface and band semantics (log-distance path loss, same-band
   interference, max-SINR association). Powers the test suite, smoke runs,
-  and pipeline development at ~10k steps/s.
+  and pipeline development at ~10k steps/s. Its numbers are NOT QuaDRiGa
+  numbers and it diverges from ``SINREvaluation.m`` on two documented points
+  (``total_power`` masking, ``avg_rate`` when nothing connects) -- never use it
+  as the template for a fidelity-critical backend.
 
 ``MatlabSession`` manages engine lifecycles. For quick interactive testing it
 can attach to an already-running shared MATLAB (run ``matlab.engine.shareEngine``
@@ -311,12 +321,20 @@ class AnalyticSinrBackend:
       - transmit powers treated as dBm, received power via log-distance decay,
       - interference accumulated over same-band transmitters only,
       - a user connects to its max-SINR BS when SINR >= threshold (dB),
-      - MBS sites expand into coverage/capacity slots in 'multi' mode,
-      - ``total_power`` is the sum of active-FBS power genes (as in
-        SINREvaluation's total_transmitted_pwr output).
+      - MBS sites expand into coverage/capacity slots in 'multi' mode.
 
     Numbers are not calibrated to QuaDRiGa — this backend exists so env
     mechanics, logging, training loops, and plots can run in milliseconds.
+
+    Two behaviours here deliberately do NOT match ``SINREvaluation.m``, and
+    ``PyqdSinrBackend`` follows the MATLAB instead on both:
+      - ``total_power`` sums only the ACTIVE FBS power genes. The MATLAB has
+        the ``power_status`` mask commented out (SINREvaluation.m:120-121) and
+        sums every gene, active or not.
+      - ``avg_rate`` is 0.0 when nothing connects; the MATLAB returns NaN
+        (with ``sum_rate`` still 0.0).
+    Both are long-standing analytic-backend conventions that tests assert, so
+    they are documented rather than changed — but do not copy them.
     """
 
     PATH_LOSS_EXP = 3.0
@@ -471,14 +489,36 @@ class AnalyticSinrBackend:
 # --------------------------------------------------------------------------- #
 # Factory
 # --------------------------------------------------------------------------- #
+#: Every accepted backend name, in the order they appear in ``--backend``
+#: choices. Single source of truth for the CLIs so a new backend cannot be
+#: half-registered.
+BACKEND_CHOICES = ("pyqd", "pyqd-fast", "matlab", "analytic")
+DEFAULT_BACKEND = "pyqd"
+
+
 def make_backend(
     world: WorldConfig,
     band: BandConfig,
-    backend: str = "matlab",
+    backend: str = DEFAULT_BACKEND,
     session: Optional[MatlabSession] = None,
 ) -> SinrBackend:
+    """Build a backend by name.
+
+    ``session`` is forwarded unconditionally by ``FlyingBaseStationEnv``, so
+    the MATLAB-free branches accept and drop it rather than making every caller
+    special-case the backend kind.
+    """
+    if backend in ("pyqd", "pyqd-fast"):
+        # Imported lazily: pyqd-channel is only needed when it is actually the
+        # selected physics, mirroring how matlab.engine is imported lazily.
+        from .pyqd_bridge import PyqdSinrBackend
+
+        return PyqdSinrBackend(world, band, fast_sampling=(backend == "pyqd-fast"))
     if backend == "matlab":
         return MatlabSinrBackend(world, band, session=session)
     if backend == "analytic":
         return AnalyticSinrBackend(world, band)
-    raise ValueError(f"unknown backend {backend!r}; expected 'matlab' or 'analytic'")
+    raise ValueError(
+        f"unknown backend {backend!r}; expected one of "
+        + ", ".join(repr(name) for name in BACKEND_CHOICES)
+    )

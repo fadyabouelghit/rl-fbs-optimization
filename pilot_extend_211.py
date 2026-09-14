@@ -29,6 +29,7 @@ import argparse
 
 from ppo import ExperimentConfig, train
 from ppo.config import BandConfig, RewardConfig, RewardWeights
+from ppo.matlab_bridge import BACKEND_CHOICES, DEFAULT_BACKEND
 
 
 def build_pilot(total_timesteps: int) -> ExperimentConfig:
@@ -58,7 +59,8 @@ def build_pilot(total_timesteps: int) -> ExperimentConfig:
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--backend", choices=["matlab", "analytic"], default="matlab")
+    p.add_argument("--backend", default=DEFAULT_BACKEND, choices=list(BACKEND_CHOICES),
+                   help="physics backend (default: %(default)s -- QuaDRiGa in-process, no MATLAB)")
     p.add_argument("--timesteps", type=int, default=20000)
     args = p.parse_args()
 

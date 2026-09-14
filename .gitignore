@@ -16,6 +16,7 @@ ppo_runs/
 ppo_logs/
 test_logs/
 cache_mbs_maps/
+cache_pyqd_maps/
 training_log.csv
 training_log.csv.bak
 *.log

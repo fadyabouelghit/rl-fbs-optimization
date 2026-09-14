@@ -9,20 +9,28 @@ absolute path is read at import time from, in order of precedence:
 3. a repo-relative default, for everything that can have one.
 
 Only ``PPO_QUADRIGA_PATH`` has no default: QuaDRiGa lives outside this repo
-and its location differs per machine. It is required by the MATLAB backend
-only -- the analytic backend, the test suite, and every plotting/analysis
+and its location differs per machine. It is required by the ``matlab`` backend
+only -- the default ``pyqd`` backend (which computes the same physics
+in-process), the analytic backend, the test suite, and every plotting/analysis
 script run without it. ``require_quadriga_path()`` raises a clear, actionable
 error at the point of use rather than at import.
 
 Recognised keys (all optional except where noted):
 
-    PPO_QUADRIGA_PATH   QuaDRiGa ``quadriga_src`` folder   (MATLAB backend only)
+    PPO_QUADRIGA_PATH   QuaDRiGa ``quadriga_src`` folder   ('matlab' backend only)
     PPO_MATLAB_PATH     .m files added to the MATLAB path  (default: ./matlab)
     PPO_RUNS_DIR        training run directories           (default: ./ppo_runs)
     PPO_TEST_LOG_DIR    legacy per-code eval logs          (default: ./test_logs)
     PPO_LEDGER_PATH     cross-run ledger CSV               (default: ./training_log.csv)
-    PPO_CACHE_DIR       precomputed MBS power maps         (default: ./cache_mbs_maps)
+    PPO_CACHE_DIR       MATLAB-written MBS map cache       (default: ./cache_mbs_maps)
+    PPO_PYQD_CACHE_DIR  pyqd-written MBS map cache         (default: ./cache_pyqd_maps)
     PPO_SECRETS_FILE    location of the secrets file       (default: ./secrets.env)
+
+The two map caches are deliberately separate directories. MATLAB keys its
+``.mat`` files by an MD5 over a MATLAB ``jsonencode`` payload; the pyqd backend
+keys its ``.npz`` files by a SHA-256 over a Python payload that also pins the
+``pyqd-channel`` version. Sharing one namespace could only ever produce a
+silent physics swap, never a useful hit.
 """
 from __future__ import annotations
 
@@ -90,7 +98,9 @@ def require_quadriga_path(override: str | Path | None = None) -> Path:
             f"    echo 'PPO_QUADRIGA_PATH=/path/to/quadriga_src' >> {SECRETS_FILE}\n"
             "    export PPO_QUADRIGA_PATH=/path/to/quadriga_src\n"
             "(copy secrets.env.example to secrets.env for the full template). "
-            "The analytic backend needs none of this: pass backend='analytic'."
+            "Neither MATLAB-free backend needs any of this: pass "
+            "backend='pyqd' for the same physics in-process, or "
+            "backend='analytic' for a fast stand-in."
         )
     if not path.is_dir():
         raise RuntimeError(
@@ -108,6 +118,7 @@ RUNS_DIR = _path_setting("PPO_RUNS_DIR", REPO_ROOT / "ppo_runs")
 TEST_LOG_DIR = _path_setting("PPO_TEST_LOG_DIR", REPO_ROOT / "test_logs")
 LEDGER_PATH = _path_setting("PPO_LEDGER_PATH", REPO_ROOT / "training_log.csv")
 CACHE_DIR = _path_setting("PPO_CACHE_DIR", REPO_ROOT / "cache_mbs_maps")
+PYQD_CACHE_DIR = _path_setting("PPO_PYQD_CACHE_DIR", REPO_ROOT / "cache_pyqd_maps")
 
 
 def ensure_dir(path: Path) -> Path:

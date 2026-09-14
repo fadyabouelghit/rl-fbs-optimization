@@ -5,7 +5,9 @@ Reinforcement-learning placement and power control for flying base stations
 
 A PPO/SAC agent moves one or more FBSs over a service area and toggles their
 power and band, maximising a connectivity/power objective evaluated by real
-QuaDRiGa physics through MATLAB — or by a fast MATLAB-free analytic backend.
+QuaDRiGa physics. The default backend computes that physics **in pure Python**
+(`pyqd-channel`), so the whole pipeline runs with no MATLAB installed; the
+original MATLAB/QuaDRiGa stack stays selectable as the reference oracle.
 
 ---
 
@@ -14,7 +16,7 @@ QuaDRiGa physics through MATLAB — or by a fast MATLAB-free analytic backend.
 ```
 ppo/                 the pipeline (config, env, backends, train, eval, logging, plots)
 matlab/              MATLAB wrappers + their full dependency closure
-tests/               MATLAB-free test suite (analytic/stub backends)
+tests/               MATLAB-free test suite (pyqd/analytic/stub backends)
 notebooks/           interactive workflows (start with ppo_workbench.ipynb)
 scripts/             batch sweep drivers
 docs/PPO_PIPELINE.md architecture and artifact reference
@@ -27,15 +29,43 @@ for pre-package notebooks), `watch_run.py` (live training dashboard),
 `plot_trajectories.py` (rollout trajectory overlays), `rerun_historical_rl.py`,
 `backfill_ledger.py`, and the `pilot_*.py` studies.
 
-## Two backends
+## Backends
 
 | backend | speed | needs | use for |
 |---|---|---|---|
+| `pyqd` *(default)* | ~1.0 steps/s | nothing | real physics, reported results |
+| `pyqd-fast` | ~160 steps/s | nothing | real physics at scale (bit-identical to `pyqd`) |
+| `matlab` | ~1.0 steps/s | MATLAB engine + QuaDRiGa | cross-checking `pyqd` against the original |
 | `analytic` | ~10k steps/s | nothing | tests, smoke runs, config/plot iteration |
-| `matlab` | ~0.6 steps/s | MATLAB engine + QuaDRiGa | real physics, reported results |
 
-Both implement the same interface and band semantics, so a config runs
-unchanged on either.
+(steps/s measured with 2 active FBSs on the default 2000×1500 world, i.e.
+scenario code `*-1-*`.)
+
+`pyqd` costs one full coverage grid per active FBS per step, so its price scales
+with the world *area*, while `pyqd-fast` costs one propagation evaluation per
+user and does not. On the 4000×3000 two-MBS world of scenario code `*-2-*` a
+single map is ~2.4 s and allocates ~3.4 GB transiently — ~0.2 steps/s, and that
+allocation is *per `n_envs` worker*. Prefer `--backend pyqd-fast` there; it is
+bit-identical, so nothing is traded away.
+
+`pyqd` is a deliberate port of `SINREvaluation.m` onto
+[`pyqd-channel`](https://pypi.org/project/pyqd-channel/), a validated Python
+port of QuaDRiGa's coverage-map subset. Its power maps agree with the archived
+MATLAB maps to **3.3e-6 dB**, and it reproduces the connection counts, tier
+split, transmitted power and average rate of completed MATLAB runs exactly
+(`tests/test_pyqd_backend.py`).
+
+`pyqd-fast` exploits the fact that user positions are snapped to integer grid
+nodes and the map step is 1 m: it evaluates the propagation model at just those
+nodes instead of over the full 3.0-million-point grid. It is **bit-identical**
+to `pyqd` (max |Δ| = 0.0 dB), ~160× cheaper per FBS map, and opt-in only so
+that default timings stay comparable with the MATLAB baseline.
+
+`analytic` is an uncalibrated log-distance stand-in — same interface and band
+semantics, numbers that mean nothing physically.
+
+All of them implement the same interface, so a config runs unchanged on any
+of them.
 
 ## Setup
 
@@ -43,8 +73,9 @@ unchanged on either.
 python -m venv venv && ./venv/bin/pip install -r requirements.txt
 ```
 
-`matlabengine` in `requirements.txt` must match your installed MATLAB release
-(R2024b → `24.2.*`). Skip it if you only need the analytic backend.
+That is everything the default `pyqd` backend needs. `matlabengine` is
+commented out in `requirements.txt`: uncomment it (matching your installed
+MATLAB release — R2024b → `24.2.*`) only if you want `--backend matlab`.
 
 ### Machine-local paths
 
@@ -55,17 +86,18 @@ git-ignored `secrets.env` at the repo root:
 cp secrets.env.example secrets.env
 ```
 
-Then set `PPO_QUADRIGA_PATH` to your QuaDRiGa `quadriga_src` folder. Every key
-can also be given as an environment variable, which takes precedence:
+**There is no required key.** Every setting has a repo-relative default, and
+the default `pyqd` backend needs no external installation at all. Each key can
+also be given as an environment variable, which takes precedence:
 
 ```bash
-PPO_QUADRIGA_PATH=/opt/quadriga_src python -m ppo train --code 1-1-1
+PPO_PYQD_CACHE_DIR=/scratch/maps python -m ppo train --code 1-1-1
 ```
 
-QuaDRiGa is the only required key, and only for the MATLAB backend — the test
-suite, the analytic backend, and every plotting/analysis script run without
-it. See `secrets.env.example` for the optional overrides (run directory,
-cache, ledger, MATLAB path). Resolution lives in [`ppo/paths.py`](ppo/paths.py).
+`PPO_QUADRIGA_PATH` (your QuaDRiGa `quadriga_src` folder) is needed only by
+`--backend matlab`. See `secrets.env.example` for the optional overrides (run
+directory, the two map caches, ledger, MATLAB path). Resolution lives in
+[`ppo/paths.py`](ppo/paths.py).
 
 ## Quick start
 
@@ -83,6 +115,9 @@ seconds — the fastest check that the pipeline is intact.
 ```bash
 python -m ppo train --code 1-1-1 --timesteps 25000 --max-episode-steps 40
 ```
+
+Real physics on the `pyqd` backend, no MATLAB. Add `--backend pyqd-fast` for
+the same numbers ~160× faster, or `--backend matlab` for the original stack.
 
 ```bash
 python watch_run.py

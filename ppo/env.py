@@ -58,7 +58,7 @@ import gymnasium as gym
 import numpy as np
 
 from .config import EnvConfig
-from .matlab_bridge import SinrBackend, SinrResult, make_backend
+from .matlab_bridge import DEFAULT_BACKEND, SinrBackend, SinrResult, make_backend
 
 
 def state_labels(config: EnvConfig) -> list[str]:
@@ -81,7 +81,7 @@ class FlyingBaseStationEnv(gym.Env):
         self,
         config: EnvConfig,
         backend: Optional[SinrBackend] = None,
-        backend_kind: str = "matlab",
+        backend_kind: str = DEFAULT_BACKEND,
         session=None,
     ):
         super().__init__()

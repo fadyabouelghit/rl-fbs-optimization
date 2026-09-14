@@ -26,7 +26,7 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 
 from ppo.evaluate import evaluate_run
-from ppo.matlab_bridge import get_shared_session
+from ppo.matlab_bridge import BACKEND_CHOICES, DEFAULT_BACKEND, get_shared_session
 from ppo.runs import load_run
 
 ASSESS_SEED = 987_654          # never used for training or model selection
@@ -96,7 +96,8 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--runs", nargs="+", required=True)
     p.add_argument("--episodes", type=int, default=20)
-    p.add_argument("--backend", default="matlab", choices=["matlab", "analytic"])
+    p.add_argument("--backend", default=DEFAULT_BACKEND, choices=list(BACKEND_CHOICES),
+                   help="physics backend (default: %(default)s -- QuaDRiGa in-process, no MATLAB)")
     p.add_argument("--model", default="final",
                    help="'final' (model.zip), 'best' (best_model.zip), or a "
                         "checkpoint name like model_00025000. Late training can "

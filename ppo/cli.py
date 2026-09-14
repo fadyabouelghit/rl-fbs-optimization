@@ -1,11 +1,11 @@
 """Command-line interface: ``python -m ppo <command>``.
 
-    train   train a policy            (real MATLAB physics by default)
+    train   train a policy            (real QuaDRiGa physics, no MATLAB)
     eval    evaluate a saved run      (multi-episode, artifacts + plots)
     plot    render training gallery / multi-run comparisons
     list    list runs (or evals of one run)
     info    show a run's resolved config
-    smoke   fast end-to-end pipeline check on the analytic backend
+    smoke   fast end-to-end pipeline check (analytic backend by default)
 
 Examples:
     python -m ppo train --code 1-1-1 --timesteps 5000 --seed 0
@@ -25,6 +25,10 @@ import os
 import sys
 
 import numpy as np
+
+# Backend names live in one place (ppo/matlab_bridge.py) so the CLI cannot
+# drift out of sync with the factory's dispatch table.
+from .matlab_bridge import BACKEND_CHOICES, DEFAULT_BACKEND
 
 
 def _parse_state(s):
@@ -92,7 +96,9 @@ def _build_parser() -> argparse.ArgumentParser:
     t.add_argument("--checkpoint-every", type=int, default=0)
     t.add_argument("--eval-every", type=int, default=0)
     t.add_argument("--tag", default=None)
-    t.add_argument("--backend", default="matlab", choices=["matlab", "analytic"])
+    t.add_argument("--backend", default=DEFAULT_BACKEND, choices=list(BACKEND_CHOICES),
+                   help="physics backend (default: %(default)s -- QuaDRiGa in-process, "
+                        "no MATLAB; 'pyqd-fast' is the bit-identical fast sampler)")
     t.add_argument("--resume-from", default=None, help="run name/path to warm-start from")
 
     # ---------------- eval ----------------
@@ -108,7 +114,7 @@ def _build_parser() -> argparse.ArgumentParser:
     e.add_argument("--seed", type=int, default=1000)
     e.add_argument("--max-episode-steps", type=int, default=None)
     e.add_argument("--action-scale", type=float, default=None)
-    e.add_argument("--backend", default="matlab", choices=["matlab", "analytic"])
+    e.add_argument("--backend", default=DEFAULT_BACKEND, choices=list(BACKEND_CHOICES))
     e.add_argument("--no-plots", action="store_true")
     e.add_argument("--no-save", action="store_true")
     e.add_argument("--mirror-test-logs", action="store_true",
@@ -138,6 +144,9 @@ def _build_parser() -> argparse.ArgumentParser:
     # ---------------- smoke ----------------
     s = sub.add_parser("smoke", help="Fast end-to-end check (no MATLAB needed)")
     s.add_argument("--timesteps", type=int, default=1024)
+    # Deliberately NOT DEFAULT_BACKEND: smoke is the ~30 s "does the pipeline
+    # still hang together" check, and a pyqd smoke would take minutes.
+    s.add_argument("--backend", default="analytic", choices=list(BACKEND_CHOICES))
     s.add_argument("--band", default="multi", choices=["legacy", "multi"])
     s.add_argument("--algo", default="ppo", choices=["ppo", "sac"])
     s.add_argument("--n-envs", type=int, default=1)
@@ -291,7 +300,7 @@ def cmd_info(args) -> int:
 
 
 def cmd_smoke(args) -> int:
-    """End-to-end pipeline check on the analytic backend (~30 s, no MATLAB)."""
+    """End-to-end pipeline check (~30 s on the default analytic backend)."""
     from .config import BandConfig, ExperimentConfig
     from .evaluate import evaluate_run
     from .train import train
@@ -318,11 +327,11 @@ def cmd_smoke(args) -> int:
         ppo_overrides=ppo_overrides,
         world_overrides={"num_users": 300},
     )
-    print(f"[smoke] training {args.timesteps} steps ({args.algo}) on the analytic backend ...")
-    run_dir = train(exp, backend="analytic")
+    print(f"[smoke] training {args.timesteps} steps ({args.algo}) on the {args.backend} backend ...")
+    run_dir = train(exp, backend=args.backend)
 
     print("[smoke] evaluating ...")
-    report = evaluate_run(run_dir, episodes=2, backend="analytic")
+    report = evaluate_run(run_dir, episodes=2, backend=args.backend)
 
     from .plotting import training_gallery
     training_gallery(run_dir)

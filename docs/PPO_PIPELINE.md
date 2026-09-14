@@ -21,21 +21,30 @@ their dependency closure live in [`matlab/`](../matlab/).
                             │ env.py                │
                             │ FlyingBaseStationEnv  │
                             ▼                       ▼
-              matlab_bridge.MatlabSinrBackend   matlab_bridge.AnalyticSinrBackend
-              (real physics, engine-side world) (numpy stand-in, ~10k steps/s)
-                            │
-                 ppo_world_setup.m  ── builds antennas/sites/cache ONCE,
-                 ppo_sinr_eval.m    ── per-step SINR, scalars-only marshalling
-                            │
-                 SINREvaluation.m + QuaDRiGa   (the radio physics)
+      pyqd_bridge.PyqdSinrBackend   matlab_bridge.MatlabSinrBackend   matlab_bridge.AnalyticSinrBackend
+      (real physics, in-process)     (real physics, engine-side world) (numpy stand-in, ~10k steps/s)
+              │                                   │
+   pyqd_channel.antenna.generate           ppo_world_setup.m  ── builds antennas/sites/cache ONCE,
+   pyqd_channel.layout.power_map           ppo_sinr_eval.m    ── per-step SINR, scalars-only marshalling
+   + a numpy port of SINREvaluation.m                │
+              │                            SINREvaluation.m + QuaDRiGa   (the radio physics)
+   (same physics, no MATLAB: maps agree to 3.3e-6 dB)
 ```
 
 Design points:
 
-- **Two interchangeable backends.** The env never talks to MATLAB directly;
-  it calls a `SinrBackend`. `backend="analytic"` runs the entire pipeline
-  (training, logging, eval, plots) in milliseconds for tests and iteration;
-  `backend="matlab"` is the real QuaDRiGa physics.
+- **Interchangeable backends.** The env never talks to MATLAB directly; it
+  calls a `SinrBackend`. `backend="pyqd"` (the default) is the real QuaDRiGa
+  physics computed in-process; `backend="pyqd-fast"` is the same numbers,
+  bit-for-bit, ~160× cheaper per FBS map; `backend="matlab"` is the original
+  MATLAB/QuaDRiGa stack, kept as the reference oracle; `backend="analytic"`
+  runs the entire pipeline (training, logging, eval, plots) in milliseconds
+  for tests and iteration, with uncalibrated numbers.
+- **The pyqd world stays in the Python process.** There is no marshalling
+  boundary at all: antennas, MBS maps and the fixed user map are plain numpy
+  living on the backend object. Sites, antennas and the per-band MBS maps are
+  built once in `PyqdSinrBackend.__init__` (the analogue of
+  `ppo_world_setup.m`), and each step only computes the per-FBS maps.
 - **The MATLAB world stays in MATLAB.** `ppo_world_setup.m` persists
   antennas + the MBS map cache in engine appdata; `ppo_sinr_eval.m` reads it
   back per step. Only scalars cross the Python↔MATLAB boundary (the old
@@ -50,11 +59,14 @@ Design points:
 ## 2. Quick start
 
 ```bash
-# fast end-to-end pipeline check, no MATLAB needed (~10 s)
+# fast end-to-end pipeline check on the analytic backend (~10 s)
 python -m ppo smoke
 
-# real training (legacy world, like the old harness)
+# real training (legacy world, like the old harness) on the pyqd backend
 python -m ppo train --code 1-1-1 --timesteps 5000 --seed 0
+
+# same physics, bit-identical, ~160x cheaper per FBS power map
+python -m ppo train --code 1-1-1 --timesteps 5000 --seed 0 --backend pyqd-fast
 
 # multi-band training: agent controls FBS bands + MBS capacity
 python -m ppo train --code 2-2-1 --band multi --fbs-band agent \
@@ -156,34 +168,58 @@ writes the old `test_logs/<code>/<run>_<ts>_*` files for existing tooling.
 
 Three layers, fastest first:
 
-1. **Unit/integration suite** — `./venv/bin/pytest` (~4 s, 40 tests, no
+1. **Unit/integration suite** — `./venv/bin/pytest` (~13 s, 105 tests, no
    MATLAB): env mechanics, reward math vs hand computations, band gene
    plumbing, logging, run discovery, **real PPO training reproducibility**
    on the analytic backend.
-2. **Pipeline smoke** — `python -m ppo smoke` (~10 s): full multi-band
+2. **pyqd fidelity tests** — included in the suite above
+   (`tests/test_pyqd_backend.py`, ~4 s, 25 tests, still no MATLAB): the
+   MATLAB user-position stream reproduced bit-exactly, a precomputed MBS map
+   compared against the archived MATLAB `.mat` cache, the swap/clamp sampling
+   convention, tier invariants, `sum(tx_power)` semantics, and a full replay
+   of a completed MATLAB GA run's metrics. The three tests that read the old
+   repo's ground-truth artifacts skip themselves when those paths are absent,
+   so the suite never hard-depends on them.
+3. **Pipeline smoke** — `python -m ppo smoke` (~10 s): full multi-band
    train → checkpoint → in-training eval → evaluation → plot gallery, with
    artifact assertions.
-3. **MATLAB bridge tests** — `PPO_MATLAB_TESTS=1 ./venv/bin/pytest
+4. **MATLAB bridge tests** — `PPO_MATLAB_TESTS=1 ./venv/bin/pytest
    tests/test_matlab_backend.py` (~20 s with a warm map cache): world build,
-   legacy + multi-band evaluation, tier invariants, determinism.
+   legacy + multi-band evaluation, tier invariants, determinism. These are
+   the only 3 tests skipped by default.
 
 Interactive speed-ups:
 
+- `--backend pyqd-fast` is bit-identical to `pyqd` and ~160× cheaper per FBS
+  map; it is the right choice for any long run, and the only reason it is not
+  the default is that `pyqd`'s cost profile matches the MATLAB baseline's,
+  which keeps published timings comparable.
+- pyqd has no session concept — nothing to warm up, nothing to attach to.
+- MBS power maps are cached on disk: `cache_pyqd_maps/` (`.npz`, keyed by a
+  SHA-256 over every map parameter plus the `pyqd-channel` version) and
+  `cache_mbs_maps/` (MATLAB's own `.mat` cache). The two caches are separate
+  directories on purpose; their key schemes are unrelated.
 - `get_shared_session()` reuses one engine across repeated evaluations in a
   process; run `matlab.engine.shareEngine` in a MATLAB console and the
   bridge attaches to it instantly instead of cold-starting (~20 s saved per
-  session).
-- MBS power maps are cached on disk (`cache_mbs_maps/`) — identical
-  geometries never recompute.
+  session). MATLAB backend only.
 
 ## 7. Reproducibility & parallelism
 
 - `ppo.seed` seeds python/numpy/torch and every env; a fixed
   `(seed, n_envs)` pair reproduces a run bit-for-bit (asserted in
-  `tests/test_train_integration.py`). User positions stay pinned to a
-  MATLAB-side fixed seed (mt19937ar, seed 0) on an isolated stream.
-- `n_envs > 1` (opt-in) uses SubprocVecEnv; each worker starts its own
-  MATLAB engine (~1–2 GB each) and is seeded `seed + worker_index`. Runs
+  `tests/test_train_integration.py`). User positions stay pinned to a fixed
+  seed (mt19937ar, seed 0) on an isolated stream. The pyqd backend
+  reproduces that MATLAB stream bit-for-bit in Python (`ppo/matlab_rng.py`:
+  MATLAB maps seed 0 onto MT19937's own default seed 5489, and `randi` is
+  `floor(rand*span)+lo` off the 53-bit double stream — `numpy`'s
+  `RandomState(0)` is a *different* stream and would silently change the
+  demand map), so pyqd and MATLAB runs share the same 1000 users.
+- `n_envs > 1` (opt-in) uses SubprocVecEnv; each worker builds its own
+  backend and is seeded `seed + worker_index`. On pyqd that is a numpy world
+  plus a one-off MBS power-map precompute, which the on-disk cache reduces to
+  a disk read after the first ever run; on matlab it is a full engine
+  (~1–2 GB each). Runs
   remain reproducible for the same `n_envs`; changing `n_envs` changes the
   rollout interleaving (treat it like any other hyperparameter — that is
   why serial remains the default).
@@ -223,3 +259,35 @@ Two legacy defects surfaced during the overhaul (both fixed):
 
 Both keep the legacy x↔y row-swap convention, so the on-disk map cache is
 keyed by geometry and reused across runs.
+
+## 10. The pyqd port
+
+[`ppo/pyqd_bridge.py`](../ppo/pyqd_bridge.py) reimplements that whole chain in
+numpy + `pyqd-channel`. It is a *port*, not a reimplementation: several MATLAB
+conventions look like bugs, are load-bearing (every archived run and cached map
+was produced under them), and are therefore reproduced exactly, each with a
+comment naming the MATLAB line it comes from. The three that matter most:
+
+- **The x↔y row swap is reproduced**, so the MBS map is computed at
+  `tx = [true_y, true_x, height]` (`ppo_world_setup.m:59-61`). The
+  `mbs_x`/`mbs_y` the backend exposes to Python are the *un*swapped, true
+  coordinates, matching `ppo_world_setup.m:88-89`.
+- **The transpose asymmetry is reproduced.** An FBS map is transposed to
+  `(n_x, n_y)` by `SINREvaluation.m:188`; a cached MBS map is left at
+  `(n_y, n_x)` by `precompute_mbs_power_maps.m:87`. Both are read by the same
+  `sample_nearest` (`SINREvaluation.m:306-321`), which always indexes
+  `P(x_index, y_index)` and clamps each index against the corresponding axis
+  of whatever it was handed. For the MBS map that first axis is only
+  `height + 1` long, so **every user with `round(x) > height` is evaluated at
+  `x == height`** — 226 of the 1000 default-world users. That is reference
+  behaviour, not a rounding detail, and `tests/test_pyqd_backend.py` pins it.
+- **`total_transmitted_pwr = sum(tx_power)`** with the `power_status` mask
+  commented out (`SINREvaluation.m:120-121`): inactive FBSs still count
+  towards reported power. Note `AnalyticSinrBackend` does *not* do this (nor
+  does it return `NaN` for `avg_rate` when nothing connects) — it is not a
+  safe template for a fidelity-critical backend.
+
+Also reproduced: the `single()` cast on MBS maps only, the FBS path's
+hard-coded scenario / mode / 1.5 m receiver height, the interleaved
+`[cov(site1), cap(site1), cov(site2), …]` slot order, and the strict `>` in the
+association loop that resolves ties to the earlier column.

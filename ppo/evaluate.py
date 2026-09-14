@@ -12,7 +12,8 @@ and writes everything under ``<run_dir>/evals/<timestamp>/``:
     summary.csv / summary.json  per-episode rows + aggregate stats
     plots/                    the full plot gallery (unless disabled)
 
-Repeated evaluations in one Python process reuse a single shared MATLAB
+The default ``pyqd`` backend needs no session at all. On ``backend='matlab'``,
+repeated evaluations in one Python process reuse a single shared MATLAB
 engine (see matlab_bridge.get_shared_session), so after the first call a
 test cycle costs seconds, not an engine restart.
 """
@@ -29,7 +30,7 @@ import pandas as pd
 
 from .config import EnvConfig, ExperimentConfig
 from .env import FlyingBaseStationEnv
-from .matlab_bridge import MatlabSession, get_shared_session
+from .matlab_bridge import DEFAULT_BACKEND, MatlabSession, get_shared_session
 from .paths import TEST_LOG_DIR, ensure_dir
 from .runs import RunHandle, infer_experiment_from_model, load_run, model_class_for
 
@@ -207,7 +208,7 @@ def evaluate_run(
     initial_state: Optional[np.ndarray] = None,
     initial_states: Optional[Sequence[np.ndarray]] = None,
     seed: int = 1000,
-    backend: str = "matlab",
+    backend: str = DEFAULT_BACKEND,
     session: Optional[MatlabSession] = None,
     max_episode_steps: Optional[int] = None,
     action_scale: Optional[float] = None,
