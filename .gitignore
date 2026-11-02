@@ -13,6 +13,9 @@ venv/
 
 # Run outputs / experiment artifacts
 ppo_runs/
+td3_runs/
+ddpg_runs/
+tuning_runs/
 ppo_logs/
 test_logs/
 cache_mbs_maps/
@@ -20,6 +23,10 @@ cache_pyqd_maps/
 training_log.csv
 training_log.csv.bak
 *.log
+
+# Local experiment workspace: launchers, analysis scripts, results, logs.
+# Never tracked -- back it up separately.
+lab/
 
 # MATLAB
 *.asv
@@ -29,3 +36,6 @@ training_log.csv.bak
 .DS_Store
 .vscode/
 .idea/
+letter_runs/
+letter_runs_2fbs/
+Claude outputs/
