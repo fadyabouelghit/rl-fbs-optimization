@@ -13,6 +13,9 @@ venv/
 
 # Run outputs / experiment artifacts
 ppo_runs/
+td3_runs/
+ddpg_runs/
+tuning_runs/
 ppo_logs/
 test_logs/
 cache_mbs_maps/
@@ -33,3 +36,6 @@ lab/
 .DS_Store
 .vscode/
 .idea/
+letter_runs/
+letter_runs_2fbs/
+Claude outputs/
