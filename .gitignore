@@ -39,3 +39,6 @@ lab/
 letter_runs/
 letter_runs_2fbs/
 Claude outputs/
+
+# ddqn_td3/ ad-hoc runs (campaigns redirect into letter_runs*/)
+ddqn_td3_runs/

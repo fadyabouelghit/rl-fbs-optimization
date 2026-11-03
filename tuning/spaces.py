@@ -127,6 +127,28 @@ SPECIFIC["td3_hybrid"] = (
 SPECIFIC["ddpg_hybrid_qd"] = SPECIFIC["ddpg_hybrid"]
 SPECIFIC["td3_hybrid_qd"] = SPECIFIC["td3_hybrid"]
 
+# Switch + pilot (ddqn_td3/). The binary_noise_std slot becomes the switch's
+# exploration_fraction: its epsilon-greedy schedule IS the on/off exploration.
+# Pinned, not searched: eps_start 1.0, eps_final 0.05, target_update 1000,
+# double_q True (ddqn_td3.config.SwitchParams). hold_k is a design arm fixed
+# per campaign, not a knob.
+_EXPL = Knob("exploration_fraction", "float", 0.05, 0.5, log=True,
+             note="replaces binary_noise_std; switch epsilon decay horizon")
+SPECIFIC["ddqn_td3"] = (
+    Knob("action_noise_std", "float", 0.05, 0.30),
+    Knob("policy_delay", "categorical", choices=(1, 2, 4)),
+    Knob("target_policy_noise", "float", 0.05, 0.40),
+    Knob("tau", "float", 1e-3, 2e-2, log=True),
+    _EXPL,
+)
+SPECIFIC["ddqn_ddpg"] = (
+    Knob("action_noise_std", "float", 0.05, 0.30),
+    Knob("noise_type", "categorical", choices=("normal", "ou")),
+    Knob("ou_dt", "float", 1e-2, 1.0, log=True),
+    Knob("tau", "float", 1e-3, 2e-2, log=True),
+    _EXPL,
+)
+
 # Every algorithm searches the same number of dimensions.
 KNOBS_PER_ALGO = 5
 
@@ -232,6 +254,15 @@ SEED_TRIALS: Dict[str, Tuple[Dict[str, Any], ...]] = {
 }
 SEED_TRIALS["ddpg_hybrid_qd"] = SEED_TRIALS["ddpg_hybrid"]
 SEED_TRIALS["td3_hybrid_qd"] = SEED_TRIALS["td3_hybrid"]
+# Switch + pilot: the parents' pre-fair1 starting points, default exploration_fraction.
+SEED_TRIALS["ddqn_td3"] = ({
+    "action_noise_std": 0.30, "policy_delay": 2, "target_policy_noise": 0.2,
+    "tau": 5e-3, "exploration_fraction": 0.2,
+},)
+SEED_TRIALS["ddqn_ddpg"] = ({
+    "action_noise_std": 0.10, "noise_type": "normal", "ou_dt": 1e-2,
+    "tau": 5e-3, "exploration_fraction": 0.2,
+},)
 
 
 # --------------------------------------------------------------------------- #
@@ -334,5 +365,31 @@ def build_experiment(algo: str, params: Dict[str, Any], protocol: Protocol,
             tau=params["tau"],
         )
         return TD3Experiment.from_code(protocol.code, td3_overrides=overrides, **common)
+
+    if algo == "ddqn_td3":
+        from td3.config import TD3Experiment
+
+        overrides.update(
+            net_arch=protocol.fixed_net_arch,
+            action_noise_std=params["action_noise_std"],
+            binary_noise_std=None,         # the pilot has no binary dims
+            policy_delay=params["policy_delay"],
+            target_policy_noise=params["target_policy_noise"],
+            tau=params["tau"],
+        )
+        return TD3Experiment.from_code(protocol.code, td3_overrides=overrides, **common)
+
+    if algo == "ddqn_ddpg":
+        from ddpg.config import DDPGExperiment
+
+        overrides.update(
+            net_arch=protocol.fixed_net_arch,
+            action_noise_std=params["action_noise_std"],
+            binary_noise_std=None,
+            noise_type=params["noise_type"],
+            ou_dt=params["ou_dt"],
+            tau=params["tau"],
+        )
+        return DDPGExperiment.from_code(protocol.code, ddpg_overrides=overrides, **common)
 
     raise ValueError(f"unknown algo {algo!r}")

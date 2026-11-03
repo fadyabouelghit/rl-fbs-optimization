@@ -38,7 +38,9 @@ OPTIMUM_J = 0.4925
 
 ALGO_OF = {"ddpg": "ddpg", "td3": "td3", "ppo": "ppo",
            "ddpg_hybrid": "ddpg", "td3_hybrid": "td3",
-           "ddpg_hybrid_qd": "ddpg", "td3_hybrid_qd": "td3"}
+           "ddpg_hybrid_qd": "ddpg", "td3_hybrid_qd": "td3",
+           # switch + pilot score through their own loader (SwitchPilotPolicy)
+           "ddqn_td3": "ddqn_td3", "ddqn_ddpg": "ddqn_ddpg"}
 
 
 # --------------------------------------------------------------------------- #
@@ -79,7 +81,7 @@ def base_params(name: str, campaign_dir: Path | None = None) -> Dict[str, Any]:
 
 def spec_key(algo: str, params: dict, seed: int, protocol: dict, instrument: bool,
              probe_every: int, log_positions: bool = False,
-             min_on=None, force_on_steps=None) -> str:
+             min_on=None, force_on_steps=None, hold_k=None) -> str:
     """Identity of a run: identical keys are the same training run.
 
     ``log_positions`` is part of the key: a run logged without positions is not
@@ -95,6 +97,8 @@ def spec_key(algo: str, params: dict, seed: int, protocol: dict, instrument: boo
         payload["min_on"] = int(min_on)
     if force_on_steps:
         payload["force_on_steps"] = int(force_on_steps)
+    if hold_k is not None:               # ddqn runs only; other keys unchanged
+        payload["hold_k"] = int(hold_k)
     blob = json.dumps(payload, sort_keys=True, default=str)
     return hashlib.sha1(blob.encode()).hexdigest()[:16]
 
@@ -183,6 +187,11 @@ def _train_fn(algo: str):
         from td3_hybrid.train import train_qd as train
     elif algo == "ppo":
         from ppo.train import train
+    elif algo in ("ddqn_td3", "ddqn_ddpg"):
+        from functools import partial
+
+        from ddqn_td3.train import train_algo
+        train = partial(train_algo, algo)
     else:
         raise ValueError(f"letter runner does not train {algo!r}")
     return train
@@ -199,9 +208,16 @@ def run_spec(spec: dict) -> dict:
     params = dict(spec["params"])
     exp = build_experiment(algo, params, protocol, seed, spec["tag"])
 
-    cbs = instrument_callbacks(exp, protocol, int(spec.get("probe_every", 1000)), algo,
-                               positions=bool(spec.get("log_positions", False))) \
-        if spec.get("instrument", True) else []
+    is_ddqn = algo in ("ddqn_td3", "ddqn_ddpg")
+    if not spec.get("instrument", True):
+        cbs = []
+    elif is_ddqn:
+        from ddqn_td3.instrument import instrument_callbacks as ddqn_instrument
+        cbs = ddqn_instrument(exp, protocol, int(spec.get("probe_every", 1000)),
+                              positions=bool(spec.get("log_positions", False)))
+    else:
+        cbs = instrument_callbacks(exp, protocol, int(spec.get("probe_every", 1000)), algo,
+                                   positions=bool(spec.get("log_positions", False)))
     train = _train_fn(algo)
     letter_meta = {k: spec[k] for k in
                    ("experiment", "run_id", "base", "overrides", "key") if k in spec}
@@ -227,6 +243,12 @@ def run_spec(spec: dict) -> dict:
         kwargs = dict(extra_callbacks=cbs, config_extra={"letter": letter_meta})
         if algo.endswith("_hybrid"):
             kwargs["gumbel_tau"] = float(params["gumbel_tau"])
+        if is_ddqn:
+            if ov is not None:
+                raise ValueError("min_on / force_on_steps do not apply to a switch + pilot run")
+            if "hold_k" not in spec:
+                raise ValueError("a ddqn spec must carry hold_k (no default)")
+            kwargs.update(params=params, hold_k=int(spec["hold_k"]))
         if ov is not None:
             from stable_baselines3 import DDPG, TD3
             from .onoff_override import onoff_override

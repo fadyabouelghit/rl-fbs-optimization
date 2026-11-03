@@ -70,13 +70,22 @@ def run_spec(spec: dict) -> dict:
     elif algo == "td3_hybrid_qd":
         from td3_hybrid.train import train_qd as train
         kwargs["gumbel_tau"] = float(spec["params"]["gumbel_tau"])
+    elif algo in ("ddqn_td3", "ddqn_ddpg"):
+        from functools import partial
+
+        from ddqn_td3.train import train_algo
+        train = partial(train_algo, algo, params=spec["params"],
+                        hold_k=int(spec["hold_k"]))     # written by --hold-k; no default
     else:
         raise ValueError(f"unknown algo {algo!r}")
 
     # Opt-in (letter Stage 4): LETTER_INSTRUMENT=1 adds the probe and the
     # compact step log to an off-policy trial. Unset, nothing changes.
     if os.environ.get("LETTER_INSTRUMENT") == "1" and algo != "ppo":
-        from letterexp.runner import instrument_callbacks
+        if algo in ("ddqn_td3", "ddqn_ddpg"):
+            from ddqn_td3.instrument import instrument_callbacks
+        else:
+            from letterexp.runner import instrument_callbacks
         kwargs["extra_callbacks"] = instrument_callbacks(exp, protocol)
 
     t0 = time.time()

@@ -24,7 +24,7 @@ import os
 import sys
 from dataclasses import replace
 
-from .protocol import ALGOS, DEFAULT, HYBRID_ALGOS, REPORT_SEED, SMOKE
+from .protocol import ALGOS, DDQN_ALGOS, DEFAULT, HYBRID_ALGOS, REPORT_SEED, SMOKE
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -37,7 +37,7 @@ def _build_parser() -> argparse.ArgumentParser:
     def _campaign(sp, algo_required=True):
         sp.add_argument("--campaign", required=True, help="campaign name (a directory)")
         if algo_required:
-            sp.add_argument("--algo", required=True, choices=list(ALGOS) + list(HYBRID_ALGOS))
+            sp.add_argument("--algo", required=True, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS))
         sp.add_argument("--workers", type=int, default=4,
                         help="concurrent trial subprocesses (default 4). GPSampler "
                              "batches with qLogEI, but the GP still learns more per "
@@ -53,6 +53,10 @@ def _build_parser() -> argparse.ArgumentParser:
                              "changes the problem, so give the campaign its own "
                              "name and TUNING_DIR -- a campaign must not mix codes.")
         sp.add_argument("--timesteps", type=int, default=None)
+        sp.add_argument("--hold-k", type=int, default=None,
+                        help="ddqn_td3 / ddqn_ddpg only, and required for them: the "
+                             "switch's hold length K, written into every trial spec. "
+                             "Fixed per campaign (a design arm, not a searched knob).")
         sp.add_argument("--quiet", action="store_true")
 
     s = sub.add_parser("search", help="stage 1: search one algorithm")
@@ -74,11 +78,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     r = sub.add_parser("report", help="tabulate a campaign")
     r.add_argument("--campaign", required=True)
-    r.add_argument("--algo", default=None, choices=list(ALGOS) + list(HYBRID_ALGOS))
+    r.add_argument("--algo", default=None, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS))
 
     rs = sub.add_parser("rescore", help="re-score a run on the held-out start states")
     rs.add_argument("--campaign", required=True)
-    rs.add_argument("--algo", required=True, choices=list(ALGOS) + list(HYBRID_ALGOS))
+    rs.add_argument("--algo", required=True, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS))
     rs.add_argument("--run", required=True, help="run directory")
     rs.add_argument("--states-seed", type=int, default=REPORT_SEED)
     rs.add_argument("--episodes", type=int, default=None)
@@ -125,6 +129,21 @@ def cmd_spaces(args) -> int:
         for k in knobs:
             print(f"    {k.name:22s} {k.range_str:28s} {k.note}")
 
+    print(f"\nSWITCH + PILOT (opt-in, ddqn_td3/) -- {KNOBS_PER_ALGO} knobs each")
+    for algo in DDQN_ALGOS:
+        knobs = space(algo)
+        assert len(knobs) == KNOBS_PER_ALGO
+        print(f"\n  {algo.upper()}")
+        for k in knobs:
+            print(f"    {k.name:22s} {k.range_str:28s} {k.note}")
+    from ddqn_td3.config import SwitchParams
+    sw = SwitchParams()
+    print("\n  switch, pinned (not searched)")
+    for name in ("eps_start", "eps_final", "target_update", "double_q", "max_grad_norm"):
+        print(f"    {name:22s} {getattr(sw, name)}")
+    print(f"    {'lr/gamma/batch/net':22s} the pilot's pinned protocol values")
+    print(f"    {'hold_k':22s} design arm, fixed per campaign (default {sw.hold_k})")
+
     print("\nNOT SEARCHABLE -- the package does not implement the knob.")
     if not UNSUPPORTED:
         print("  (none)")
@@ -144,7 +163,7 @@ def cmd_search(args) -> int:
               "comparison ***")
     search(args.campaign, args.algo, _protocol(args), workers=args.workers,
            sampler_seed=args.sampler_seed, wide=getattr(args, "wide", False),
-           quiet=args.quiet)
+           quiet=args.quiet, hold_k=args.hold_k)
     return 0
 
 
@@ -152,7 +171,7 @@ def cmd_confirm(args) -> int:
     from .study import confirm
 
     summary = confirm(args.campaign, args.algo, _protocol(args),
-                      workers=args.workers, quiet=args.quiet)
+                      workers=args.workers, quiet=args.quiet, hold_k=args.hold_k)
     win = summary["winner"]
     if win:
         print(f"\nwinner: trial {win['trial']}  mean {win['mean']:.4f} "

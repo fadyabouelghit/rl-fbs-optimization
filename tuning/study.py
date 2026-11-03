@@ -33,7 +33,7 @@ import optuna
 from ppo.paths import REPO_ROOT, ensure_dir
 
 from . import paths
-from .protocol import DEFAULT, Protocol
+from .protocol import DDQN_ALGOS, DEFAULT, Protocol
 from .spaces import seed_trials, space
 
 # Each algorithm's runs, and its ledger, are redirected into the campaign
@@ -45,7 +45,9 @@ _RUNS_ENV: Dict[str, str] = {"ppo": "PPO_RUNS_DIR", "td3": "TD3_RUNS_DIR",
                              # hybrids train through ddpg/ and td3/ loggers
                              "ddpg_hybrid": "DDPG_RUNS_DIR", "td3_hybrid": "TD3_RUNS_DIR",
                              "ddpg_hybrid_qd": "DDPG_RUNS_DIR",
-                             "td3_hybrid_qd": "TD3_RUNS_DIR"}
+                             "td3_hybrid_qd": "TD3_RUNS_DIR",
+                             # switch + pilot trains through the pilot's logger
+                             "ddqn_td3": "TD3_RUNS_DIR", "ddqn_ddpg": "DDPG_RUNS_DIR"}
 
 
 def trial_env(campaign: str, algo: str) -> Dict[str, str]:
@@ -116,14 +118,42 @@ class _Job:
         self.started = time.time()
 
 
+def check_hold_k(study: optuna.Study, algo: str, hold_k: Optional[int]) -> Optional[int]:
+    """The switch's hold length K is a design arm fixed per campaign, not a knob.
+
+    Required for the ddqn algorithms (no silent default), refused for every
+    other algorithm, and pinned on the study the first time it is given: a
+    later search or confirm with a different K is refused, because confirm
+    reuses stage-1 results and a mixed-K campaign would compare unlike runs.
+    """
+    if algo not in DDQN_ALGOS:
+        if hold_k is not None:
+            raise SystemExit(f"--hold-k applies only to {', '.join(DDQN_ALGOS)}, not {algo}")
+        return None
+    if hold_k is None:
+        raise SystemExit(f"{algo} needs --hold-k (the switch's hold length, fixed per campaign)")
+    hold_k = int(hold_k)
+    if hold_k < 1:
+        raise SystemExit("--hold-k must be >= 1")
+    stored = study.user_attrs.get("hold_k")
+    if stored is None:
+        study.set_user_attr("hold_k", hold_k)
+    elif int(stored) != hold_k:
+        raise SystemExit(f"campaign study {algo} was run with hold_k={stored}; "
+                         f"got --hold-k {hold_k}. Use a separate campaign per K.")
+    return hold_k
+
+
 def _launch(campaign: str, algo: str, protocol: Protocol, trial_number: int,
-            params: dict, seed: int, tag: str) -> tuple:
+            params: dict, seed: int, tag: str, hold_k: Optional[int] = None) -> tuple:
     spec = {
         "study": campaign, "algo": algo, "trial": trial_number,
         "params": params, "seed": seed, "tag": tag,
         "protocol": asdict(protocol),
         "result_path": str(paths.result_path(campaign, algo, trial_number)),
     }
+    if hold_k is not None:              # ddqn only; other specs are unchanged
+        spec["hold_k"] = int(hold_k)
     sp = paths.spec_path(campaign, algo, trial_number)
     sp.write_text(json.dumps(spec, indent=2, default=str))
     logf = paths.trial_log_path(campaign, algo, trial_number)
@@ -138,7 +168,8 @@ def _launch(campaign: str, algo: str, protocol: Protocol, trial_number: int,
 
 def search(campaign: str, algo: str, protocol: Protocol = DEFAULT, *,
            workers: int = 4, sampler_seed: int = 0, wide: bool = False,
-           poll_seconds: float = 2.0, quiet: bool = False) -> optuna.Study:
+           poll_seconds: float = 2.0, quiet: bool = False,
+           hold_k: Optional[int] = None) -> optuna.Study:
     """Stage 1: ``protocol.n_trials`` trials at ``protocol.search_seed``.
 
     ``wide`` selects the widened boundary-probe space for this algorithm
@@ -146,6 +177,7 @@ def search(campaign: str, algo: str, protocol: Protocol = DEFAULT, *,
     equal-budget comparison and belongs in its own campaign.
     """
     study = make_study(campaign, algo, protocol, sampler_seed)
+    hold_k = check_hold_k(study, algo, hold_k)
     knobs = space(algo, wide)
 
     # Recommendation 3 of the tuning-methods page: start from the best known
@@ -172,7 +204,7 @@ def search(campaign: str, algo: str, protocol: Protocol = DEFAULT, *,
             tag = f"t{trial.number:04d}_s{protocol.search_seed}"
             spec, popen, logf, handle = _launch(
                 campaign, algo, protocol, trial.number, params,
-                protocol.search_seed, tag)
+                protocol.search_seed, tag, hold_k)
             job = _Job(trial, popen, spec, logf)
             job._handle = handle
             jobs.append(job)
@@ -274,7 +306,7 @@ def existing_results(campaign: str, algo: str) -> Dict[tuple, dict]:
 
 def confirm(campaign: str, algo: str, protocol: Protocol = DEFAULT, *,
             workers: int = 4, poll_seconds: float = 2.0,
-            quiet: bool = False) -> dict:
+            quiet: bool = False, hold_k: Optional[int] = None) -> dict:
     """Re-run the top configs across ``protocol.confirm_seeds``.
 
     Ranked on mean - sd, so a config that is merely lucky on one seed cannot
@@ -283,6 +315,7 @@ def confirm(campaign: str, algo: str, protocol: Protocol = DEFAULT, *,
     same number at full cost.
     """
     study = make_study(campaign, algo, protocol)
+    hold_k = check_hold_k(study, algo, hold_k)
     complete = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
     if not complete:
         raise SystemExit(f"no completed trials for {algo} in campaign {campaign}")
@@ -326,7 +359,7 @@ def confirm(campaign: str, algo: str, protocol: Protocol = DEFAULT, *,
             counter += 1
             tag = f"c{t.number:04d}_s{seed}"
             spec, popen, logf, handle = _launch(
-                campaign, algo, protocol, counter, t.params, seed, tag)
+                campaign, algo, protocol, counter, t.params, seed, tag, hold_k)
             job = _Job(t, popen, spec, logf)
             job._handle, job._seed = handle, seed
             jobs.append(job)
@@ -346,6 +379,8 @@ def confirm(campaign: str, algo: str, protocol: Protocol = DEFAULT, *,
             say(f"[{algo}] <- confirm trial {job.trial.number} seed {job._seed} {mark}")
 
     summary = _summarise_confirmation(algo, finalists, results, protocol)
+    if hold_k is not None:
+        summary["hold_k"] = hold_k
     out = paths.study_dir(campaign) / f"{algo}_confirmation.json"
     out.write_text(json.dumps(summary, indent=2, default=str))
     say(f"[{algo}] confirmation -> {out}")

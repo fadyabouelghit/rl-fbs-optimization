@@ -38,6 +38,10 @@ ALGOS: Tuple[str, ...] = ("ppo", "td3", "ddpg")
 HYBRID_ALGOS: Tuple[str, ...] = ("ddpg_hybrid", "td3_hybrid",
                                  "ddpg_hybrid_qd", "td3_hybrid_qd")
 
+# Opt-in switch + pilot variants (ddqn_td3/): a Double-DQN on/off switch and a
+# TD3 / DDPG pilot for the continuous genes. Same Protocol, same five-knob budget.
+DDQN_ALGOS: Tuple[str, ...] = ("ddqn_td3", "ddqn_ddpg")
+
 # Never used for training, model selection or the tuning objective -- the
 # held-out draw recommendation 5 of the tuning-methods page asks for.
 REPORT_SEED = 246_813
