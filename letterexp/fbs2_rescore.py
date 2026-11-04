@@ -35,6 +35,7 @@ SAT = 0.96          # |mu| above this counts as saturated   (letterexp/probe.py)
 LOCK_FRAC = 0.95    # share of off states that must be saturated
 CLASS_MIN = 15      # >= 15 of 20 test states to earn a class label
 ALGOS = ("ppo", "td3", "ddpg")
+DDQN = ("ddqn_td3", "ddqn_ddpg")   # switch + pilot (ddqn_td3/), opt-in via --algos
 
 
 def _load_assess():
@@ -75,8 +76,100 @@ def _rebuild_obs(env, state_row, globals_row) -> np.ndarray:
     return env._get_obs()
 
 
+def _klass(n_active: np.ndarray) -> str:
+    if np.sum(n_active == 2) >= CLASS_MIN:
+        return "both_on"
+    if np.sum(n_active == 1) >= CLASS_MIN:
+        return "one_on"
+    if np.sum(n_active == 0) >= CLASS_MIN:
+        return "none_on"
+    return "mixed"
+
+
+def score_one_ddqn(algo: str, run_dir: str, trial: int, seed: int, ref_J: float,
+                   model: str = "best") -> dict:
+    """Switch + pilot run: same classes and J check as ``score_one``.
+
+    The actor-based lock rule does not apply (the pilot has no on/off output).
+    Its counterpart is the switch's own preference at the final state:
+    gap_j = max Q(s, a | j on) - max Q(s, a | j off). A station counts as
+    LOCKED OFF when it is off and the greedy switch would keep it off
+    (gap_j < 0) in at least 95% of the test states where it is off.
+    """
+    from dataclasses import replace
+
+    import torch as th
+
+    from ddqn_td3.config import Layout
+    from ddqn_td3.evaluate import evaluate_run, load_run
+    from ddqn_td3.switch import SwitchAgent
+    from ppo.env import FlyingBaseStationEnv
+    from tuning.protocol import DEFAULT
+
+    protocol = replace(DEFAULT, code="2-1-1")
+    am = _load_assess()
+    run_dir = Path(run_dir)
+    exp = load_run(run_dir)[1]
+    states = am.start_states(exp.env, protocol.objective_episodes, seed=protocol.objective_seed)
+    rep = evaluate_run(run_dir, episodes=protocol.objective_episodes, initial_states=states,
+                       backend=protocol.backend, save=False, make_plots=False, model=model)
+    finals = np.array([r.metrics_df["reward_objective"].iloc[-1] for r in rep.episodes])
+    J = float(finals.mean())
+
+    n_fbs = exp.env.num_fbs
+    gene = np.zeros((len(rep.episodes), n_fbs), dtype=int)
+    obs_rows = []
+    env = FlyingBaseStationEnv(exp.env, backend_kind="analytic")   # obs assembly only
+    try:
+        for i, r in enumerate(rep.episodes):
+            last = r.state_df.iloc[-1]
+            for j in range(n_fbs):
+                gene[i, j] = int(last[(f"fbs{j}", "power_status")] > 0.5)
+            st = [last[(f"fbs{j}", g)] for j in range(n_fbs)
+                  for g in ("x", "y", "height", "power", "power_status")]
+            gl = [float(last[("global", k)]) for k in
+                  ("fbs_delta", "total_delta", "fbs_frac", "mbs_frac", "total_frac", "norm_power")]
+            obs_rows.append(_rebuild_obs(env, st, gl))
+    finally:
+        env.close()
+    net, _ = SwitchAgent.load_net(run_dir / ("best_switch.pt" if model == "best" else "switch.pt"))
+    with th.no_grad():
+        q = net(th.as_tensor(np.stack(obs_rows).astype(np.float32))).numpy()
+    layout = Layout(exp.env)
+
+    n_active = gene.sum(axis=1)
+    row = {"algo": algo, "trial": trial, "seed": seed, "run_dir": str(run_dir), "model": model,
+           "J": J, "J_ref": ref_J, "J_match": bool(abs(J - ref_J) < 1e-9),
+           "n_states": len(gene),
+           "states_2on": int(np.sum(n_active == 2)), "states_1on": int(np.sum(n_active == 1)),
+           "states_0on": int(np.sum(n_active == 0)),
+           "fbs_connected": float(np.mean(
+               [r.metrics_df["fbs_connected"].iloc[-1] for r in rep.episodes])),
+           "klass": _klass(n_active)}
+    for j in range(n_fbs):
+        on = layout.on_mask(j)
+        gap = q[:, on].max(axis=1) - q[:, ~on].max(axis=1)
+        off = gene[:, j] == 0
+        row[f"fbs{j}_off_states"] = int(off.sum())
+        row[f"fbs{j}_gap_median"] = float(np.median(gap))
+        share = float(np.mean(gap[off] < 0)) if off.any() else float("nan")
+        row[f"fbs{j}_prefer_off_share_when_off"] = share
+        row[f"fbs{j}_locked_off"] = bool(off.any() and share >= LOCK_FRAC)
+    if row["klass"] == "one_on":
+        off_counts = [row[f"fbs{j}_off_states"] for j in range(n_fbs)]
+        dominant = int(np.argmax(off_counts))
+        row["off_station"] = dominant
+        row["fixed_off_station"] = bool(off_counts[dominant] >= CLASS_MIN)
+        row["off_station_locked"] = bool(row[f"fbs{dominant}_locked_off"])
+    else:
+        row["off_station"], row["fixed_off_station"], row["off_station_locked"] = -1, False, False
+    return row
+
+
 def score_one(algo: str, run_dir: str, trial: int, seed: int, ref_J: float,
               model: str = "best") -> dict:
+    if algo in DDQN:
+        return score_one_ddqn(algo, run_dir, trial, seed, ref_J, model)
     from tuning.protocol import DEFAULT
     from tuning.worker import protocol_from_dict
     from dataclasses import replace, asdict
@@ -179,10 +272,10 @@ def score_one(algo: str, run_dir: str, trial: int, seed: int, ref_J: float,
     return row
 
 
-def collect(algos=ALGOS, workers: int = 8) -> pd.DataFrame:
+def collect(algos=ALGOS, workers: int = 8, campaign_dir: Path = FAIR2) -> pd.DataFrame:
     jobs = []
     for algo in algos:
-        f = FAIR2 / f"{algo}_confirmation.json"
+        f = Path(campaign_dir) / f"{algo}_confirmation.json"
         if not f.is_file():
             print(f"[skip] {f} missing")
             continue
@@ -212,11 +305,18 @@ def collect(algos=ALGOS, workers: int = 8) -> pd.DataFrame:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m letterexp.fbs2_rescore")
     ap.add_argument("--workers", type=int, default=8)
-    ap.add_argument("--algos", nargs="+", default=list(ALGOS))
+    ap.add_argument("--algos", nargs="+", default=list(ALGOS),
+                    help=f"default {' '.join(ALGOS)}; switch + pilot: {' '.join(DDQN)}")
+    ap.add_argument("--campaign", default="fair2",
+                    help="campaign directory under letter_runs_2fbs/tuning/ (default fair2)")
+    ap.add_argument("--out", default="rescore_best.csv",
+                    help="file name under letter_runs_2fbs/analysis/ (default rescore_best.csv)")
     a = ap.parse_args(argv)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    df = collect(a.algos, a.workers)
-    out = OUT_DIR / "rescore_best.csv"
+    out = OUT_DIR / a.out
+    if out.exists() and a.out == "rescore_best.csv" and a.campaign != "fair2":
+        raise SystemExit("refusing to overwrite the fair2 rescore_best.csv; pass --out")
+    df = collect(a.algos, a.workers, FAIR2.parent / a.campaign)
     df.to_csv(out, index=False)
     print(f"\n-> {out}  ({len(df)} rows)")
     bad = df[df.get("error").notna()] if "error" in df else df.iloc[:0]
