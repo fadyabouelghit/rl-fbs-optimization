@@ -149,6 +149,11 @@ SPECIFIC["ddqn_ddpg"] = (
     _EXPL,
 )
 
+# Try both (on_off_td3/): the same five knobs as the switch + pilot, for the same reason
+# (eps over on/off patterns replaces binary_noise_std).
+SPECIFIC["on_off_td3"] = SPECIFIC["ddqn_td3"]
+SPECIFIC["on_off_ddpg"] = SPECIFIC["ddqn_ddpg"]
+
 # Every algorithm searches the same number of dimensions.
 KNOBS_PER_ALGO = 5
 
@@ -254,7 +259,8 @@ SEED_TRIALS: Dict[str, Tuple[Dict[str, Any], ...]] = {
 }
 SEED_TRIALS["ddpg_hybrid_qd"] = SEED_TRIALS["ddpg_hybrid"]
 SEED_TRIALS["td3_hybrid_qd"] = SEED_TRIALS["td3_hybrid"]
-# Switch + pilot: the parents' pre-fair1 starting points, default exploration_fraction.
+# Switch + pilot and try both: the parents' pre-fair1 starting points, default
+# exploration_fraction.
 SEED_TRIALS["ddqn_td3"] = ({
     "action_noise_std": 0.30, "policy_delay": 2, "target_policy_noise": 0.2,
     "tau": 5e-3, "exploration_fraction": 0.2,
@@ -263,6 +269,8 @@ SEED_TRIALS["ddqn_ddpg"] = ({
     "action_noise_std": 0.10, "noise_type": "normal", "ou_dt": 1e-2,
     "tau": 5e-3, "exploration_fraction": 0.2,
 },)
+SEED_TRIALS["on_off_td3"] = SEED_TRIALS["ddqn_td3"]
+SEED_TRIALS["on_off_ddpg"] = SEED_TRIALS["ddqn_ddpg"]
 
 
 # --------------------------------------------------------------------------- #
@@ -366,7 +374,7 @@ def build_experiment(algo: str, params: Dict[str, Any], protocol: Protocol,
         )
         return TD3Experiment.from_code(protocol.code, td3_overrides=overrides, **common)
 
-    if algo == "ddqn_td3":
+    if algo in ("ddqn_td3", "on_off_td3"):
         from td3.config import TD3Experiment
 
         overrides.update(
@@ -379,7 +387,7 @@ def build_experiment(algo: str, params: Dict[str, Any], protocol: Protocol,
         )
         return TD3Experiment.from_code(protocol.code, td3_overrides=overrides, **common)
 
-    if algo == "ddqn_ddpg":
+    if algo in ("ddqn_ddpg", "on_off_ddpg"):
         from ddpg.config import DDPGExperiment
 
         overrides.update(

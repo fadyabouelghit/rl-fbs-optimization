@@ -77,7 +77,8 @@ PEAK_MB_PER_WORKER = 30.0        # steps.csv exists until the run is scored
 _RUNS_ENV = {"ppo": "PPO_RUNS_DIR", "td3": "TD3_RUNS_DIR", "ddpg": "DDPG_RUNS_DIR",
              "ddpg_hybrid": "DDPG_RUNS_DIR", "td3_hybrid": "TD3_RUNS_DIR",
              "ddpg_hybrid_qd": "DDPG_RUNS_DIR", "td3_hybrid_qd": "TD3_RUNS_DIR",
-             "ddqn_td3": "TD3_RUNS_DIR", "ddqn_ddpg": "DDPG_RUNS_DIR"}
+             "ddqn_td3": "TD3_RUNS_DIR", "ddqn_ddpg": "DDPG_RUNS_DIR",
+             "on_off_td3": "TD3_RUNS_DIR", "on_off_ddpg": "DDPG_RUNS_DIR"}
 
 
 # --------------------------------------------------------------------------- #

@@ -76,6 +76,11 @@ def run_spec(spec: dict) -> dict:
         from ddqn_td3.train import train_algo
         train = partial(train_algo, algo, params=spec["params"],
                         hold_k=int(spec["hold_k"]))     # written by --hold-k; no default
+    elif algo in ("on_off_td3", "on_off_ddpg"):
+        from functools import partial
+
+        from on_off_td3.train import train_algo as on_off_train
+        train = partial(on_off_train, algo, params=spec["params"])
     else:
         raise ValueError(f"unknown algo {algo!r}")
 
@@ -84,6 +89,8 @@ def run_spec(spec: dict) -> dict:
     if os.environ.get("LETTER_INSTRUMENT") == "1" and algo != "ppo":
         if algo in ("ddqn_td3", "ddqn_ddpg"):
             from ddqn_td3.instrument import instrument_callbacks
+        elif algo in ("on_off_td3", "on_off_ddpg"):
+            from on_off_td3.callbacks import instrument_callbacks
         else:
             from letterexp.runner import instrument_callbacks
         kwargs["extra_callbacks"] = instrument_callbacks(exp, protocol)
