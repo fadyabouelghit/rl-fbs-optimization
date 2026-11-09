@@ -40,7 +40,8 @@ HYBRID_ALGOS: Tuple[str, ...] = ("ddpg_hybrid", "td3_hybrid",
 
 # Opt-in switch + pilot variants (ddqn_td3/): a Double-DQN on/off switch and a
 # TD3 / DDPG pilot for the continuous genes. Same Protocol, same five-knob budget.
-DDQN_ALGOS: Tuple[str, ...] = ("ddqn_td3", "ddqn_ddpg")
+# ddqn_ppo (ddqn_ppo/, Hybrid A) is the same switch with a PPO pilot.
+DDQN_ALGOS: Tuple[str, ...] = ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo")
 
 # Opt-in "try both" agents (on_off_td3/): one TD3 / DDPG agent whose critic picks the
 # on/off pattern by scoring all of them. Same Protocol, same five-knob budget.

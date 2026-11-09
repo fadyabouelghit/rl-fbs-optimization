@@ -35,7 +35,7 @@ SAT = 0.96          # |mu| above this counts as saturated   (letterexp/probe.py)
 LOCK_FRAC = 0.95    # share of off states that must be saturated
 CLASS_MIN = 15      # >= 15 of 20 test states to earn a class label
 ALGOS = ("ppo", "td3", "ddpg")
-DDQN = ("ddqn_td3", "ddqn_ddpg")   # switch + pilot (ddqn_td3/), opt-in via --algos
+DDQN = ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo")   # switch + pilot (ddqn_td3/, ddqn_ppo/), opt-in
 ON_OFF = ("on_off_td3", "on_off_ddpg")   # try both (on_off_td3/), opt-in via --algos
 
 

@@ -54,7 +54,7 @@ def _build_parser() -> argparse.ArgumentParser:
                              "name and TUNING_DIR -- a campaign must not mix codes.")
         sp.add_argument("--timesteps", type=int, default=None)
         sp.add_argument("--hold-k", type=int, default=None,
-                        help="ddqn_td3 / ddqn_ddpg only, and required for them: the "
+                        help="ddqn_td3 / ddqn_ddpg / ddqn_ppo only, and required for them: the "
                              "switch's hold length K, written into every trial spec. "
                              "Fixed per campaign (a design arm, not a searched knob).")
         sp.add_argument("--quiet", action="store_true")
@@ -143,6 +143,7 @@ def cmd_spaces(args) -> int:
         print(f"    {name:22s} {getattr(sw, name)}")
     print(f"    {'lr/gamma/batch/net':22s} the pilot's pinned protocol values")
     print(f"    {'hold_k':22s} design arm, fixed per campaign (default {sw.hold_k})")
+    print(f"    {'ddqn_ppo':22s} PPO pilot: clip_range pinned 0.3, switch learning_starts 100")
 
     print(f"\nTRY BOTH (opt-in, on_off_td3/) -- {', '.join(ON_OFF_ALGOS)}: the same five "
           "knobs as ddqn_td3 / ddqn_ddpg; eps_start 1.0, eps_final 0.05 pinned")

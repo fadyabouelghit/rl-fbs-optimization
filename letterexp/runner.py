@@ -42,7 +42,9 @@ ALGO_OF = {"ddpg": "ddpg", "td3": "td3", "ppo": "ppo",
            # switch + pilot score through their own loader (SwitchPilotPolicy)
            "ddqn_td3": "ddqn_td3", "ddqn_ddpg": "ddqn_ddpg",
            # try both scores through its parent package (model.zip is a full policy)
-           "on_off_td3": "on_off_td3", "on_off_ddpg": "on_off_ddpg"}
+           "on_off_td3": "on_off_td3", "on_off_ddpg": "on_off_ddpg",
+           # Hybrid A: switch + PPO pilot, scored through SwitchPilotPolicy
+           "ddqn_ppo": "ddqn_ppo"}
 
 
 # --------------------------------------------------------------------------- #
@@ -199,6 +201,11 @@ def _train_fn(algo: str):
 
         from on_off_td3.train import train_algo as on_off_train
         train = partial(on_off_train, algo)
+    elif algo == "ddqn_ppo":
+        from functools import partial
+
+        from ddqn_ppo.train import train_algo as ddqn_ppo_train
+        train = partial(ddqn_ppo_train, algo)
     else:
         raise ValueError(f"letter runner does not train {algo!r}")
     return train
@@ -215,7 +222,7 @@ def run_spec(spec: dict) -> dict:
     params = dict(spec["params"])
     exp = build_experiment(algo, params, protocol, seed, spec["tag"])
 
-    is_ddqn = algo in ("ddqn_td3", "ddqn_ddpg")
+    is_ddqn = algo in ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo")
     is_on_off = algo in ("on_off_td3", "on_off_ddpg")
     if not spec.get("instrument", True):
         cbs = []

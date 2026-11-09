@@ -21,18 +21,14 @@ from ppo.evaluate import EvalReport, EpisodeRollout, _aggregate, rollout_episode
 from ppo.matlab_bridge import DEFAULT_BACKEND
 from ppo.paths import ensure_dir
 
-from .policy import SwitchPilotPolicy, switch_meta
+from .policy import SwitchPilotPolicy, pilot_loader, switch_meta
 
 
 def load_run(run_dir: Path | str):
     """(run_dir, pilot experiment) for a ddqn_td3 run directory."""
     run_dir = Path(run_dir)
     cfg = json.loads((run_dir / "experiment_config.json").read_text())
-    pilot = switch_meta(cfg)["pilot"]
-    if pilot == "td3":
-        from td3.config import td3_experiment_from_json_dict as from_json
-    else:
-        from ddpg.config import ddpg_experiment_from_json_dict as from_json
+    _, from_json = pilot_loader(switch_meta(cfg)["pilot"])
     return run_dir, from_json(cfg)
 
 

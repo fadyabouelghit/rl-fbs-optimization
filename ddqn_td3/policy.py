@@ -32,6 +32,27 @@ def switch_meta(cfg: dict) -> dict:
                          "provenance.ddqn_switch block") from None
 
 
+def pilot_loader(pilot: str):
+    """(SB3 class, experiment_from_json) for a switch run's pilot package.
+
+    'ppo' is Hybrid A (ddqn_ppo/): its experiment_config.json is a PPO
+    ExperimentConfig and model.zip a plain SB3 PPO whose deterministic predict
+    is the Gaussian mean.
+    """
+    if pilot == "td3":
+        from stable_baselines3 import TD3 as Algo
+        from td3.config import td3_experiment_from_json_dict as from_json
+    elif pilot == "ddpg":
+        from stable_baselines3 import DDPG as Algo
+        from ddpg.config import ddpg_experiment_from_json_dict as from_json
+    elif pilot == "ppo":
+        from stable_baselines3 import PPO as Algo
+        from ppo.config import experiment_from_json_dict as from_json
+    else:
+        raise ValueError(f"unknown pilot {pilot!r}")
+    return Algo, from_json
+
+
 class SwitchPilotPolicy:
     def __init__(self, pilot_model, q_net, layout: Layout, hold_k: int):
         self.pilot, self.q_net, self.layout = pilot_model, q_net, layout
@@ -46,13 +67,7 @@ class SwitchPilotPolicy:
             raise ValueError(f"which must be 'best' or 'final', got {which!r}")
         cfg = json.loads((run_dir / "experiment_config.json").read_text())
         meta = switch_meta(cfg)
-        pilot = meta["pilot"]
-        if pilot == "td3":
-            from stable_baselines3 import TD3 as Algo
-            from td3.config import td3_experiment_from_json_dict as from_json
-        else:
-            from stable_baselines3 import DDPG as Algo
-            from ddpg.config import ddpg_experiment_from_json_dict as from_json
+        Algo, from_json = pilot_loader(meta["pilot"])
         exp = from_json(cfg)
         model_file, switch_file = _FILES[which]
         model = Algo.load(str(run_dir / model_file), device="cpu")

@@ -64,8 +64,8 @@ def _load(algo: str, run_dir: Path):
         from ddpg.runs import load_run
 
         return load_run(run_dir)[1], evaluate_run
-    if algo in ("ddqn_td3", "ddqn_ddpg"):
-        # switch + pilot: scored through SwitchPilotPolicy (full env action)
+    if algo in ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo"):
+        # switch + pilot (ddqn_ppo: PPO pilot): scored through SwitchPilotPolicy (full env action)
         from ddqn_td3.evaluate import evaluate_run, load_run
 
         return load_run(run_dir)[1], evaluate_run
