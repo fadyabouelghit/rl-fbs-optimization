@@ -85,7 +85,7 @@ _RUNS_ENV = {"ppo": "PPO_RUNS_DIR", "td3": "TD3_RUNS_DIR", "ddpg": "DDPG_RUNS_DI
              "ddpg_hybrid_qd": "DDPG_RUNS_DIR", "td3_hybrid_qd": "TD3_RUNS_DIR",
              "ddqn_td3": "TD3_RUNS_DIR", "ddqn_ddpg": "DDPG_RUNS_DIR",
              "on_off_td3": "TD3_RUNS_DIR", "on_off_ddpg": "DDPG_RUNS_DIR",
-             "ddqn_ppo": "DDQN_PPO_RUNS_DIR"}
+             "ddqn_ppo": "DDQN_PPO_RUNS_DIR", "ppo_onoff": "PPO_ONOFF_RUNS_DIR"}
 
 
 # --------------------------------------------------------------------------- #
@@ -376,7 +376,7 @@ def _child_env(name: str, algo: str) -> Dict[str, str]:
     runs.mkdir(parents=True, exist_ok=True)
     assert_allowed(runs)
     env[_RUNS_ENV[algo]] = str(runs)
-    if algo in ("ppo", "ddqn_ppo"):
+    if algo in ("ppo", "ddqn_ppo", "ppo_onoff"):
         env["PPO_LEDGER_PATH"] = str(runs / "ledger.csv")
         env["PPO_RUNS_DIR"] = str(runs)
     for k in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",

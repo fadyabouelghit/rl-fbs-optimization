@@ -24,7 +24,8 @@ import os
 import sys
 from dataclasses import replace
 
-from .protocol import ALGOS, DDQN_ALGOS, DEFAULT, HYBRID_ALGOS, ON_OFF_ALGOS, REPORT_SEED, SMOKE
+from .protocol import (ALGOS, DDQN_ALGOS, DEFAULT, HYBRID_ALGOS, ON_OFF_ALGOS,
+                       PPO_ONOFF_ALGOS, REPORT_SEED, SMOKE)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -37,7 +38,7 @@ def _build_parser() -> argparse.ArgumentParser:
     def _campaign(sp, algo_required=True):
         sp.add_argument("--campaign", required=True, help="campaign name (a directory)")
         if algo_required:
-            sp.add_argument("--algo", required=True, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS) + list(ON_OFF_ALGOS))
+            sp.add_argument("--algo", required=True, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS) + list(ON_OFF_ALGOS) + list(PPO_ONOFF_ALGOS))
         sp.add_argument("--workers", type=int, default=4,
                         help="concurrent trial subprocesses (default 4). GPSampler "
                              "batches with qLogEI, but the GP still learns more per "
@@ -78,11 +79,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     r = sub.add_parser("report", help="tabulate a campaign")
     r.add_argument("--campaign", required=True)
-    r.add_argument("--algo", default=None, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS) + list(ON_OFF_ALGOS))
+    r.add_argument("--algo", default=None, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS) + list(ON_OFF_ALGOS) + list(PPO_ONOFF_ALGOS))
 
     rs = sub.add_parser("rescore", help="re-score a run on the held-out start states")
     rs.add_argument("--campaign", required=True)
-    rs.add_argument("--algo", required=True, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS) + list(ON_OFF_ALGOS))
+    rs.add_argument("--algo", required=True, choices=list(ALGOS) + list(HYBRID_ALGOS) + list(DDQN_ALGOS) + list(ON_OFF_ALGOS) + list(PPO_ONOFF_ALGOS))
     rs.add_argument("--run", required=True, help="run directory")
     rs.add_argument("--states-seed", type=int, default=REPORT_SEED)
     rs.add_argument("--episodes", type=int, default=None)
@@ -148,6 +149,10 @@ def cmd_spaces(args) -> int:
     print(f"\nTRY BOTH (opt-in, on_off_td3/) -- {', '.join(ON_OFF_ALGOS)}: the same five "
           "knobs as ddqn_td3 / ddqn_ddpg; eps_start 1.0, eps_final 0.05 pinned")
 
+    print(f"\nHYBRID B (opt-in, ppo_onoff/) -- {KNOBS_PER_ALGO} knobs")
+    for k in space("ppo_onoff"):
+        print(f"    {k.name:22s} {k.range_str:28s} {k.note}")
+    print(f"    {'pinned':22s} n_epochs 20, clip_range 0.3 (fair2 PPO t35); eps 1.0 -> 0.05")
     print("\nNOT SEARCHABLE -- the package does not implement the knob.")
     if not UNSUPPORTED:
         print("  (none)")

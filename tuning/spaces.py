@@ -161,6 +161,18 @@ SPECIFIC["ddqn_ppo"] = (
          note="replaces clip_range (pinned 0.3); switch epsilon decay horizon"),
 )
 
+# Hybrid B (ppo_onoff/): PPO's ent_coef, n_steps, gae_lambda plus the critics'
+# exploration_fraction and Polyak tau. n_epochs 20 and clip_range 0.3 are pinned
+# at the fair2 PPO winner t35's values (ppo_onoff.config), as section 6.6 says.
+SPECIFIC["ppo_onoff"] = (
+    Knob("ent_coef", "float", 1e-4, 0.05, log=True),
+    Knob("n_steps", "categorical", choices=(512, 1024, 2048)),
+    Knob("gae_lambda", "float", 0.90, 0.99),
+    Knob("exploration_fraction", "float", 0.05, 0.5, log=True,
+         note="eps decay horizon for the on/off pattern"),
+    Knob("tau", "float", 1e-3, 2e-2, log=True, note="critics' Polyak rate"),
+)
+
 # Try both (on_off_td3/): the same five knobs as the switch + pilot, for the same reason
 # (eps over on/off patterns replaces binary_noise_std).
 SPECIFIC["on_off_td3"] = SPECIFIC["ddqn_td3"]
@@ -285,6 +297,10 @@ SEED_TRIALS["ddqn_ppo"] = ({
     "ent_coef": 0.01, "n_steps": 1024, "n_epochs": 10, "gae_lambda": 0.95,
     "exploration_fraction": 0.2,
 },)
+SEED_TRIALS["ppo_onoff"] = ({
+    "ent_coef": 0.01, "n_steps": 1024, "gae_lambda": 0.95,
+    "exploration_fraction": 0.2, "tau": 5e-3,
+},)
 SEED_TRIALS["on_off_td3"] = SEED_TRIALS["ddqn_td3"]
 SEED_TRIALS["on_off_ddpg"] = SEED_TRIALS["ddqn_ddpg"]
 
@@ -334,6 +350,22 @@ def build_experiment(algo: str, params: Dict[str, Any], protocol: Protocol,
         # size pinned at 256 and the smallest n_steps at 512 this never
         # binds, but it is kept so that widening either one cannot turn a
         # sampled config into a crashed trial.
+        overrides["batch_size"] = min(overrides["batch_size"],
+                                      params["n_steps"] * protocol.n_envs)
+        return ExperimentConfig.from_code(protocol.code, ppo_overrides=overrides, **common)
+
+    if algo == "ppo_onoff":
+        from ppo.config import ExperimentConfig
+        from ppo_onoff.config import PINNED_CLIP_RANGE as CLIP, PINNED_N_EPOCHS
+
+        overrides.update(
+            algo="ppo",
+            ent_coef=params["ent_coef"],
+            n_steps=params["n_steps"],
+            n_epochs=PINNED_N_EPOCHS,
+            gae_lambda=params["gae_lambda"],
+            clip_range=CLIP,
+        )
         overrides["batch_size"] = min(overrides["batch_size"],
                                       params["n_steps"] * protocol.n_envs)
         return ExperimentConfig.from_code(protocol.code, ppo_overrides=overrides, **common)

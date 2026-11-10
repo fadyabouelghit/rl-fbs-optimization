@@ -44,7 +44,9 @@ ALGO_OF = {"ddpg": "ddpg", "td3": "td3", "ppo": "ppo",
            # try both scores through its parent package (model.zip is a full policy)
            "on_off_td3": "on_off_td3", "on_off_ddpg": "on_off_ddpg",
            # Hybrid A: switch + PPO pilot, scored through SwitchPilotPolicy
-           "ddqn_ppo": "ddqn_ppo"}
+           "ddqn_ppo": "ddqn_ppo",
+           # Hybrid B: model.zip is a full policy, scored through ppo/
+           "ppo_onoff": "ppo_onoff"}
 
 
 # --------------------------------------------------------------------------- #
@@ -206,6 +208,11 @@ def _train_fn(algo: str):
 
         from ddqn_ppo.train import train_algo as ddqn_ppo_train
         train = partial(ddqn_ppo_train, algo)
+    elif algo == "ppo_onoff":
+        from functools import partial
+
+        from ppo_onoff.train import train_algo as ppo_onoff_train
+        train = partial(ppo_onoff_train, algo)
     else:
         raise ValueError(f"letter runner does not train {algo!r}")
     return train
@@ -224,8 +231,13 @@ def run_spec(spec: dict) -> dict:
 
     is_ddqn = algo in ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo")
     is_on_off = algo in ("on_off_td3", "on_off_ddpg")
+    is_ppo_onoff = algo == "ppo_onoff"
     if not spec.get("instrument", True):
         cbs = []
+    elif is_ppo_onoff:
+        from ppo_onoff.callbacks import instrument_callbacks as ppo_onoff_instrument
+        cbs = ppo_onoff_instrument(exp, protocol, int(spec.get("probe_every", 1000)),
+                                   positions=bool(spec.get("log_positions", False)))
     elif is_on_off:
         from on_off_td3.callbacks import instrument_callbacks as on_off_instrument
         cbs = on_off_instrument(exp, protocol, int(spec.get("probe_every", 1000)))
@@ -267,6 +279,10 @@ def run_spec(spec: dict) -> dict:
             if "hold_k" not in spec:
                 raise ValueError("a ddqn spec must carry hold_k (no default)")
             kwargs.update(params=params, hold_k=int(spec["hold_k"]))
+        if is_ppo_onoff:
+            if ov is not None:
+                raise ValueError("min_on / force_on_steps do not apply to a ppo_onoff run")
+            kwargs["params"] = params
         if is_on_off:
             if ov is not None:
                 raise ValueError("min_on / force_on_steps do not apply to an on_off run")

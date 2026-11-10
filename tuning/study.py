@@ -50,7 +50,8 @@ _RUNS_ENV: Dict[str, str] = {"ppo": "PPO_RUNS_DIR", "td3": "TD3_RUNS_DIR",
                              "ddqn_td3": "TD3_RUNS_DIR", "ddqn_ddpg": "DDPG_RUNS_DIR",
                              "on_off_td3": "TD3_RUNS_DIR", "on_off_ddpg": "DDPG_RUNS_DIR",
                              # Hybrid A writes its own runs root and ledger
-                             "ddqn_ppo": "DDQN_PPO_RUNS_DIR"}
+                             "ddqn_ppo": "DDQN_PPO_RUNS_DIR",
+                             "ppo_onoff": "PPO_ONOFF_RUNS_DIR"}
 
 
 def trial_env(campaign: str, algo: str) -> Dict[str, str]:
@@ -58,8 +59,8 @@ def trial_env(campaign: str, algo: str) -> Dict[str, str]:
     runs = ensure_dir(paths.study_dir(campaign) / f"{algo}_runs")
     env = dict(os.environ)
     env[_RUNS_ENV[algo]] = str(runs)
-    if algo in ("ppo", "ddqn_ppo"):
-        # ddqn_ppo never uses ppo's ledger; pointing it here anyway means a
+    if algo in ("ppo", "ddqn_ppo", "ppo_onoff"):
+        # ddqn_ppo / ppo_onoff never uses ppo's ledger; pointing it here anyway means a
         # mistake could only ever land inside the campaign directory
         env["PPO_LEDGER_PATH"] = str(runs / "ledger.csv")
         env["PPO_RUNS_DIR"] = str(runs)

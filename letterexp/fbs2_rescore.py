@@ -37,6 +37,7 @@ CLASS_MIN = 15      # >= 15 of 20 test states to earn a class label
 ALGOS = ("ppo", "td3", "ddpg")
 DDQN = ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo")   # switch + pilot (ddqn_td3/, ddqn_ppo/), opt-in
 ON_OFF = ("on_off_td3", "on_off_ddpg")   # try both (on_off_td3/), opt-in via --algos
+PPO_ONOFF = ("ppo_onoff",)   # Hybrid B (ppo_onoff/), opt-in via --algos
 
 
 def _load_assess():
@@ -181,8 +182,15 @@ def score_one_on_off(algo: str, run_dir: str, trial: int, seed: int, ref_J: floa
     from ppo.env import FlyingBaseStationEnv
     from tuning.protocol import DEFAULT
 
-    fam = {"on_off_td3": "td3", "on_off_ddpg": "ddpg"}[algo]
-    if fam == "td3":
+    fam = {"on_off_td3": "td3", "on_off_ddpg": "ddpg", "ppo_onoff": "ppo"}[algo]
+    if fam == "ppo":
+        from ppo.evaluate import evaluate_run
+        from ppo.runs import load_run as _ppo_load_run
+        from stable_baselines3 import PPO as Algo
+
+        def load_run(rd):
+            return None, _ppo_load_run(rd).exp
+    elif fam == "td3":
         from td3.evaluate import evaluate_run
         from td3.runs import load_run
         Algo = TD3
@@ -219,7 +227,8 @@ def score_one_on_off(algo: str, run_dir: str, trial: int, seed: int, ref_J: floa
                     device="cpu").policy
     with th.no_grad():
         o = th.as_tensor(np.stack(obs_rows).astype(np.float32))
-        sc = pol.pattern_scores(pol.critic, o, pol.actor(o)).numpy()
+        sc = (pol.pattern_scores(pol.critic, o) if fam == "ppo"          # PPO mean inside
+              else pol.pattern_scores(pol.critic, o, pol.actor(o))).numpy()
     pats = pol.patterns.numpy() > 0
     n_active = gene.sum(axis=1)
     row = {"algo": algo, "trial": trial, "seed": seed, "run_dir": str(run_dir), "model": model,
@@ -253,7 +262,7 @@ def score_one(algo: str, run_dir: str, trial: int, seed: int, ref_J: float,
               model: str = "best") -> dict:
     if algo in DDQN:
         return score_one_ddqn(algo, run_dir, trial, seed, ref_J, model)
-    if algo in ON_OFF:
+    if algo in ON_OFF or algo in PPO_ONOFF:
         return score_one_on_off(algo, run_dir, trial, seed, ref_J, model)
     from tuning.protocol import DEFAULT
     from tuning.worker import protocol_from_dict
@@ -392,7 +401,7 @@ def main(argv=None) -> int:
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--algos", nargs="+", default=list(ALGOS),
                     help=f"default {' '.join(ALGOS)}; switch + pilot: {' '.join(DDQN)}; "
-                         f"try both: {' '.join(ON_OFF)}")
+                         f"try both: {' '.join(ON_OFF)}; Hybrid B: {' '.join(PPO_ONOFF)}")
     ap.add_argument("--campaign", default="fair2",
                     help="campaign directory under letter_runs_2fbs/tuning/ (default fair2)")
     ap.add_argument("--out", default="rescore_best.csv",

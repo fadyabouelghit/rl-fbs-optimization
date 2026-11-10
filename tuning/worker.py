@@ -82,6 +82,11 @@ def run_spec(spec: dict) -> dict:
         from ddqn_ppo.train import train_algo as ddqn_ppo_train
         train = partial(ddqn_ppo_train, algo, params=spec["params"],
                         hold_k=int(spec["hold_k"]))     # written by --hold-k; no default
+    elif algo == "ppo_onoff":
+        from functools import partial
+
+        from ppo_onoff.train import train_algo as ppo_onoff_train
+        train = partial(ppo_onoff_train, algo, params=spec["params"])
     elif algo in ("on_off_td3", "on_off_ddpg"):
         from functools import partial
 
@@ -95,6 +100,8 @@ def run_spec(spec: dict) -> dict:
     if os.environ.get("LETTER_INSTRUMENT") == "1" and algo != "ppo":
         if algo in ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo"):
             from ddqn_td3.instrument import instrument_callbacks
+        elif algo == "ppo_onoff":
+            from ppo_onoff.callbacks import instrument_callbacks
         elif algo in ("on_off_td3", "on_off_ddpg"):
             from on_off_td3.callbacks import instrument_callbacks
         else:

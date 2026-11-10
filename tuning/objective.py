@@ -45,7 +45,9 @@ def _assess_models():
 
 def _load(algo: str, run_dir: Path):
     """(experiment, evaluate_run) for the package that owns this run."""
-    if algo == "ppo":
+    if algo in ("ppo", "ppo_onoff"):
+        # ppo_onoff: model.zip names OnOffPPOPolicy, whose predict returns the full
+        # action with the critics' best pattern; PPO.load restores it
         from ppo.evaluate import evaluate_run
         from ppo.runs import load_run
 
