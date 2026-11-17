@@ -39,6 +39,13 @@ def _isolate_tuning_paths(tmp_path, monkeypatch):
     from tuning import paths as tp
 
     monkeypatch.setattr(tp, "TUNING_DIR", tmp_path / "tuning_runs")
+    # trials trained in-process log through ddpg/ and td3/: keep their ledgers out too
+    import ddpg.paths
+    import td3.paths
+    monkeypatch.setattr(ddpg.paths, "DDPG_RUNS_DIR", tmp_path / "ddpg_runs")
+    monkeypatch.setattr(ddpg.paths, "DDPG_LEDGER_PATH", tmp_path / "ddpg_runs" / "ledger.csv")
+    monkeypatch.setattr(td3.paths, "TD3_RUNS_DIR", tmp_path / "td3_runs")
+    monkeypatch.setattr(td3.paths, "TD3_LEDGER_PATH", tmp_path / "td3_runs" / "ledger.csv")
     yield
 
 

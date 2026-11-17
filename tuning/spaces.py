@@ -127,6 +127,57 @@ SPECIFIC["td3_hybrid"] = (
 SPECIFIC["ddpg_hybrid_qd"] = SPECIFIC["ddpg_hybrid"]
 SPECIFIC["td3_hybrid_qd"] = SPECIFIC["td3_hybrid"]
 
+# Switch + pilot (ddqn_td3/). The binary_noise_std slot becomes the switch's
+# exploration_fraction: its epsilon-greedy schedule IS the on/off exploration.
+# Pinned, not searched: eps_start 1.0, eps_final 0.05, target_update 1000,
+# double_q True (ddqn_td3.config.SwitchParams). hold_k is a design arm fixed
+# per campaign, not a knob.
+_EXPL = Knob("exploration_fraction", "float", 0.05, 0.5, log=True,
+             note="replaces binary_noise_std; switch epsilon decay horizon")
+SPECIFIC["ddqn_td3"] = (
+    Knob("action_noise_std", "float", 0.05, 0.30),
+    Knob("policy_delay", "categorical", choices=(1, 2, 4)),
+    Knob("target_policy_noise", "float", 0.05, 0.40),
+    Knob("tau", "float", 1e-3, 2e-2, log=True),
+    _EXPL,
+)
+SPECIFIC["ddqn_ddpg"] = (
+    Knob("action_noise_std", "float", 0.05, 0.30),
+    Knob("noise_type", "categorical", choices=("normal", "ou")),
+    Knob("ou_dt", "float", 1e-2, 1.0, log=True),
+    Knob("tau", "float", 1e-3, 2e-2, log=True),
+    _EXPL,
+)
+
+# Hybrid A (ddqn_ppo/): the same switch with a PPO pilot. PPO's five knobs
+# minus clip_range, which is pinned at ddqn_ppo.config.PINNED_CLIP_RANGE (0.3,
+# the value all 8 fair2 PPO finalists chose), plus exploration_fraction.
+SPECIFIC["ddqn_ppo"] = (
+    Knob("ent_coef", "float", 1e-4, 0.05, log=True),
+    Knob("n_steps", "categorical", choices=(512, 1024, 2048)),
+    Knob("n_epochs", "categorical", choices=(5, 10, 20)),
+    Knob("gae_lambda", "float", 0.90, 0.99),
+    Knob("exploration_fraction", "float", 0.05, 0.5, log=True,
+         note="replaces clip_range (pinned 0.3); switch epsilon decay horizon"),
+)
+
+# Hybrid B (ppo_onoff/): PPO's ent_coef, n_steps, gae_lambda plus the critics'
+# exploration_fraction and Polyak tau. n_epochs 20 and clip_range 0.3 are pinned
+# at the fair2 PPO winner t35's values (ppo_onoff.config), as section 6.6 says.
+SPECIFIC["ppo_onoff"] = (
+    Knob("ent_coef", "float", 1e-4, 0.05, log=True),
+    Knob("n_steps", "categorical", choices=(512, 1024, 2048)),
+    Knob("gae_lambda", "float", 0.90, 0.99),
+    Knob("exploration_fraction", "float", 0.05, 0.5, log=True,
+         note="eps decay horizon for the on/off pattern"),
+    Knob("tau", "float", 1e-3, 2e-2, log=True, note="critics' Polyak rate"),
+)
+
+# Try both (on_off_td3/): the same five knobs as the switch + pilot, for the same reason
+# (eps over on/off patterns replaces binary_noise_std).
+SPECIFIC["on_off_td3"] = SPECIFIC["ddqn_td3"]
+SPECIFIC["on_off_ddpg"] = SPECIFIC["ddqn_ddpg"]
+
 # Every algorithm searches the same number of dimensions.
 KNOBS_PER_ALGO = 5
 
@@ -232,6 +283,26 @@ SEED_TRIALS: Dict[str, Tuple[Dict[str, Any], ...]] = {
 }
 SEED_TRIALS["ddpg_hybrid_qd"] = SEED_TRIALS["ddpg_hybrid"]
 SEED_TRIALS["td3_hybrid_qd"] = SEED_TRIALS["td3_hybrid"]
+# Switch + pilot and try both: the parents' pre-fair1 starting points, default
+# exploration_fraction.
+SEED_TRIALS["ddqn_td3"] = ({
+    "action_noise_std": 0.30, "policy_delay": 2, "target_policy_noise": 0.2,
+    "tau": 5e-3, "exploration_fraction": 0.2,
+},)
+SEED_TRIALS["ddqn_ddpg"] = ({
+    "action_noise_std": 0.10, "noise_type": "normal", "ou_dt": 1e-2,
+    "tau": 5e-3, "exploration_fraction": 0.2,
+},)
+SEED_TRIALS["ddqn_ppo"] = ({
+    "ent_coef": 0.01, "n_steps": 1024, "n_epochs": 10, "gae_lambda": 0.95,
+    "exploration_fraction": 0.2,
+},)
+SEED_TRIALS["ppo_onoff"] = ({
+    "ent_coef": 0.01, "n_steps": 1024, "gae_lambda": 0.95,
+    "exploration_fraction": 0.2, "tau": 5e-3,
+},)
+SEED_TRIALS["on_off_td3"] = SEED_TRIALS["ddqn_td3"]
+SEED_TRIALS["on_off_ddpg"] = SEED_TRIALS["ddqn_ddpg"]
 
 
 # --------------------------------------------------------------------------- #
@@ -279,6 +350,38 @@ def build_experiment(algo: str, params: Dict[str, Any], protocol: Protocol,
         # size pinned at 256 and the smallest n_steps at 512 this never
         # binds, but it is kept so that widening either one cannot turn a
         # sampled config into a crashed trial.
+        overrides["batch_size"] = min(overrides["batch_size"],
+                                      params["n_steps"] * protocol.n_envs)
+        return ExperimentConfig.from_code(protocol.code, ppo_overrides=overrides, **common)
+
+    if algo == "ppo_onoff":
+        from ppo.config import ExperimentConfig
+        from ppo_onoff.config import PINNED_CLIP_RANGE as CLIP, PINNED_N_EPOCHS
+
+        overrides.update(
+            algo="ppo",
+            ent_coef=params["ent_coef"],
+            n_steps=params["n_steps"],
+            n_epochs=PINNED_N_EPOCHS,
+            gae_lambda=params["gae_lambda"],
+            clip_range=CLIP,
+        )
+        overrides["batch_size"] = min(overrides["batch_size"],
+                                      params["n_steps"] * protocol.n_envs)
+        return ExperimentConfig.from_code(protocol.code, ppo_overrides=overrides, **common)
+
+    if algo == "ddqn_ppo":
+        from ddqn_ppo.config import PINNED_CLIP_RANGE
+        from ppo.config import ExperimentConfig
+
+        overrides.update(
+            algo="ppo",
+            ent_coef=params["ent_coef"],
+            n_steps=params["n_steps"],
+            n_epochs=params["n_epochs"],
+            gae_lambda=params["gae_lambda"],
+            clip_range=PINNED_CLIP_RANGE,
+        )
         overrides["batch_size"] = min(overrides["batch_size"],
                                       params["n_steps"] * protocol.n_envs)
         return ExperimentConfig.from_code(protocol.code, ppo_overrides=overrides, **common)
@@ -334,5 +437,31 @@ def build_experiment(algo: str, params: Dict[str, Any], protocol: Protocol,
             tau=params["tau"],
         )
         return TD3Experiment.from_code(protocol.code, td3_overrides=overrides, **common)
+
+    if algo in ("ddqn_td3", "on_off_td3"):
+        from td3.config import TD3Experiment
+
+        overrides.update(
+            net_arch=protocol.fixed_net_arch,
+            action_noise_std=params["action_noise_std"],
+            binary_noise_std=None,         # the pilot has no binary dims
+            policy_delay=params["policy_delay"],
+            target_policy_noise=params["target_policy_noise"],
+            tau=params["tau"],
+        )
+        return TD3Experiment.from_code(protocol.code, td3_overrides=overrides, **common)
+
+    if algo in ("ddqn_ddpg", "on_off_ddpg"):
+        from ddpg.config import DDPGExperiment
+
+        overrides.update(
+            net_arch=protocol.fixed_net_arch,
+            action_noise_std=params["action_noise_std"],
+            binary_noise_std=None,
+            noise_type=params["noise_type"],
+            ou_dt=params["ou_dt"],
+            tau=params["tau"],
+        )
+        return DDPGExperiment.from_code(protocol.code, ddpg_overrides=overrides, **common)
 
     raise ValueError(f"unknown algo {algo!r}")

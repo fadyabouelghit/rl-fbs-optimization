@@ -107,6 +107,8 @@ def train(
     extra_callbacks: Optional[list] = None,
     model_factory: Optional[Callable] = None,
     config_extra: Optional[dict] = None,
+    vec_env_wrapper: Optional[Callable] = None,
+    eval_env_wrapper: Optional[Callable] = None,
 ) -> Path:
     """Train TD3 under ``exp``; returns the run directory (under td3_runs/
     unless ``run_dir`` is given).
@@ -119,6 +121,11 @@ def train(
     model_factory   : ``f(exp, vec_env) -> model`` used instead of
                       ``build_model`` for a fresh (non-resumed) run.
     config_extra    : extra keys merged into experiment_config.json's extra.
+    vec_env_wrapper : ``f(vec_env) -> vec_env`` applied to the training
+                      VecEnv *below* VecNormalize (SB3 reads the replay
+                      buffer's observations from VecNormalize, so a wrapper
+                      that changes the observation must sit under it).
+    eval_env_wrapper: ``f(env) -> env`` applied to the in-training eval env.
     """
     logger = TD3RunLogger(exp, run_dir=run_dir, backend_kind=backend)
     log = logger.log
@@ -159,6 +166,10 @@ def train(
             )
             if exp.td3.eval_every > 0:
                 eval_env = FlyingBaseStationEnv(exp.env, backend_kind=backend)
+        if vec_env_wrapper is not None:
+            vec_env = vec_env_wrapper(vec_env)
+        if eval_env is not None and eval_env_wrapper is not None:
+            eval_env = eval_env_wrapper(eval_env)
         if exp.td3.normalize_reward:
             # Observations stay unnormalized (the env scales them itself), so
             # the saved policy runs against a plain env at evaluation time.

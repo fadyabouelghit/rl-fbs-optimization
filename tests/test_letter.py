@@ -36,6 +36,9 @@ def dirs(tmp_path, monkeypatch):
 
     monkeypatch.setattr(ddpg.paths, "DDPG_RUNS_DIR", tmp_path / "ddpg")
     monkeypatch.setattr(td3.paths, "TD3_RUNS_DIR", tmp_path / "td3")
+    # the ledger paths are computed at import, so they must be patched too
+    monkeypatch.setattr(ddpg.paths, "DDPG_LEDGER_PATH", tmp_path / "ddpg" / "ledger.csv")
+    monkeypatch.setattr(td3.paths, "TD3_LEDGER_PATH", tmp_path / "td3" / "ledger.csv")
     monkeypatch.setattr(letterexp.probe, "PROBE_SET_DIR", tmp_path / "probe")
     return tmp_path
 

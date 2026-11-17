@@ -17,12 +17,18 @@ original MATLAB/QuaDRiGa stack stays selectable as the reference oracle.
 ppo/                 the pipeline (config, env, backends, train, eval, logging, plots)
 td3/                 TD3 prototype, separate from ppo/ (reuses its env, backends, plots)
 ddpg/                DDPG prototype, same arrangement (TD3 without its three tricks)
-tuning/              shared hyperparameter tuner: equal budget for all three
+tuning/              shared hyperparameter tuner: equal budget for every algorithm
+letterexp/           letter experiment harness (plans, instrumented runs, rescoring)
+ddqn_td3/            Double-DQN on/off switch + TD3/DDPG pilot
+on_off_td3/          "try both": TD3/DDPG whose critic picks the on/off pattern
+ddqn_ppo/            Hybrid A: the Double-DQN switch + a PPO pilot
+ppo_onoff/           Hybrid B: twin critics pick the on/off pattern, PPO places
 matlab/              MATLAB wrappers + their full dependency closure
 tests/               MATLAB-free test suite (pyqd/analytic/stub backends)
 notebooks/           interactive workflows (start with ppo_workbench.ipynb)
 scripts/             batch sweep drivers
 docs/PPO_PIPELINE.md architecture and artifact reference
+docs/RL_ARCHITECTURES_2026-11-08.md  every agent architecture, with specs and results
 secrets.env.example  template for machine-local paths (copy to secrets.env)
 ```
 
@@ -110,8 +116,8 @@ The contract, all of it in `tuning/protocol.py`:
   states and reference points. Model *selection* uses a third seed (12345),
   so selection and scoring never share a draw.
 - **Same seed protocol** — stage 1 searches at seed 0; stage 2 re-runs the top
-  5 across seeds 0–4 and ranks on **mean − sd**, putting reliability inside
-  the objective rather than in a footnote.
+  8 across seeds 0–4, then across seeds 0–34, and ranks on **mean − sd**,
+  putting reliability inside the objective rather than in a footnote.
 - **Same shared hyperparameters** — learning rate 3e-4, discount 0.95, batch
   256 and architecture (64,64) are *pinned* for all three rather than
   searched, so a trial only ever varies what is specific to its algorithm.
@@ -156,6 +162,37 @@ keeps 180 runs out of `ppo_runs/`, `td3_runs/`, `ddpg_runs/` and
 `training_log.csv` — and has the useful side effect that a trial is an
 *ordinary* run of its algorithm, so `python -m ddpg plot --run ...` and
 `python -m ddpg assess` work on a campaign's output unchanged.
+
+## Hyperparameter tuning (letter, equal-budget comparison)
+
+### Protocol
+
+- **Budget:** the same for every algorithm and scenario (M = 1 and M = 2 FBSs).
+- **Search:** Gaussian-process Bayesian optimization trains 60 configurations, one seed each.
+- **Finalists:** the 8 best configurations are retrained with 35 seeds each (including the search seed), giving 280 trained agents per algorithm and scenario.
+- **Scoring:** each training run keeps its best checkpoint, chosen by evaluations on 10 episodes every 4000 steps. That agent is scored by U-bar, the end-of-episode utility averaged over 20 held-out test episodes, with deterministic actions (PPO uses its mean action). The test start states are shared by all algorithms and are not used for checkpoint selection.
+- **Ranking:** finalists are ranked by the mean minus the standard deviation of U-bar over seeds. The first is the winner and the first three are the top three.
+- **Shared settings:** see Table I of the letter (learning rate 3e-4, batch size 256, 2 x 64 hidden layers, replay buffer 1e6, gamma 0.95, 1e5 training steps). All other settings use the Stable-Baselines3 defaults.
+
+### Searched hyperparameters and winners
+
+| Algorithm | Hyperparameter | Search range | Winner, M = 1 | Winner, M = 2 |
+|---|---|---|---|---|
+| PPO | Entropy coefficient | [1e-4, 0.05] | 0.0036 | 0.0013 |
+| PPO | Rollout length | {512, 1024, 2048} | 512 | 512 |
+| PPO | Epochs per update | {5, 10, 20} | 20 | 20 |
+| PPO | GAE parameter | [0.90, 0.99] | 0.99 | 0.961 |
+| PPO | Clipping c | {0.1, 0.2, 0.3} | 0.3 | 0.3 |
+| DDPG | sigma_c (noise std, continuous entries) | [0.05, 0.30] | 0.247 | 0.192 |
+| DDPG | sigma_b (noise std, on/off entries) | [0.2, 1.0] | 0.369 | 0.412 |
+| DDPG | Noise type | Gaussian, OU | Gaussian | Gaussian |
+| DDPG | OU time step (OU noise only) | [0.01, 1] | n/a | n/a |
+| DDPG | xi (soft-update rate) | [1e-3, 0.02] | 0.02 | 0.0162 |
+| TD3 | sigma_c (noise std, continuous entries) | [0.05, 0.30] | 0.30 | 0.30 |
+| TD3 | sigma_b (noise std, on/off entries) | [0.2, 1.0] | 0.807 | 0.450 |
+| TD3 | d (policy delay) | {1, 2, 4} | 1 | 1 |
+| TD3 | Target action noise | [0.05, 0.40] | 0.40 | 0.309 |
+| TD3 | xi (soft-update rate) | [1e-3, 0.02] | 0.02 | 0.02 |
 
 ## Backends
 

@@ -70,13 +70,42 @@ def run_spec(spec: dict) -> dict:
     elif algo == "td3_hybrid_qd":
         from td3_hybrid.train import train_qd as train
         kwargs["gumbel_tau"] = float(spec["params"]["gumbel_tau"])
+    elif algo in ("ddqn_td3", "ddqn_ddpg"):
+        from functools import partial
+
+        from ddqn_td3.train import train_algo
+        train = partial(train_algo, algo, params=spec["params"],
+                        hold_k=int(spec["hold_k"]))     # written by --hold-k; no default
+    elif algo == "ddqn_ppo":
+        from functools import partial
+
+        from ddqn_ppo.train import train_algo as ddqn_ppo_train
+        train = partial(ddqn_ppo_train, algo, params=spec["params"],
+                        hold_k=int(spec["hold_k"]))     # written by --hold-k; no default
+    elif algo == "ppo_onoff":
+        from functools import partial
+
+        from ppo_onoff.train import train_algo as ppo_onoff_train
+        train = partial(ppo_onoff_train, algo, params=spec["params"])
+    elif algo in ("on_off_td3", "on_off_ddpg"):
+        from functools import partial
+
+        from on_off_td3.train import train_algo as on_off_train
+        train = partial(on_off_train, algo, params=spec["params"])
     else:
         raise ValueError(f"unknown algo {algo!r}")
 
     # Opt-in (letter Stage 4): LETTER_INSTRUMENT=1 adds the probe and the
     # compact step log to an off-policy trial. Unset, nothing changes.
     if os.environ.get("LETTER_INSTRUMENT") == "1" and algo != "ppo":
-        from letterexp.runner import instrument_callbacks
+        if algo in ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo"):
+            from ddqn_td3.instrument import instrument_callbacks
+        elif algo == "ppo_onoff":
+            from ppo_onoff.callbacks import instrument_callbacks
+        elif algo in ("on_off_td3", "on_off_ddpg"):
+            from on_off_td3.callbacks import instrument_callbacks
+        else:
+            from letterexp.runner import instrument_callbacks
         kwargs["extra_callbacks"] = instrument_callbacks(exp, protocol)
 
     t0 = time.time()

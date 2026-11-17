@@ -38,6 +38,18 @@ ALGOS: Tuple[str, ...] = ("ppo", "td3", "ddpg")
 HYBRID_ALGOS: Tuple[str, ...] = ("ddpg_hybrid", "td3_hybrid",
                                  "ddpg_hybrid_qd", "td3_hybrid_qd")
 
+# Opt-in switch + pilot variants (ddqn_td3/): a Double-DQN on/off switch and a
+# TD3 / DDPG pilot for the continuous genes. Same Protocol, same five-knob budget.
+# ddqn_ppo (ddqn_ppo/, Hybrid A) is the same switch with a PPO pilot.
+DDQN_ALGOS: Tuple[str, ...] = ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo")
+
+# Opt-in "try both" agents (on_off_td3/): one TD3 / DDPG agent whose critic picks the
+# on/off pattern by scoring all of them. Same Protocol, same five-knob budget.
+ON_OFF_ALGOS: Tuple[str, ...] = ("on_off_td3", "on_off_ddpg")
+
+# Opt-in Hybrid B (ppo_onoff/): twin critics pick the on/off pattern, PPO places.
+PPO_ONOFF_ALGOS: Tuple[str, ...] = ("ppo_onoff",)
+
 # Never used for training, model selection or the tuning objective -- the
 # held-out draw recommendation 5 of the tuning-methods page asks for.
 REPORT_SEED = 246_813

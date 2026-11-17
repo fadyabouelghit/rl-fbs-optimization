@@ -45,21 +45,30 @@ def _assess_models():
 
 def _load(algo: str, run_dir: Path):
     """(experiment, evaluate_run) for the package that owns this run."""
-    if algo == "ppo":
+    if algo in ("ppo", "ppo_onoff"):
+        # ppo_onoff: model.zip names OnOffPPOPolicy, whose predict returns the full
+        # action with the critics' best pattern; PPO.load restores it
         from ppo.evaluate import evaluate_run
         from ppo.runs import load_run
 
         return load_run(run_dir).exp, evaluate_run
-    if algo in ("td3", "td3_hybrid", "td3_hybrid_qd"):
+    if algo in ("td3", "td3_hybrid", "td3_hybrid_qd", "on_off_td3"):
         from td3.evaluate import evaluate_run
         from td3.runs import load_run
 
         return load_run(run_dir)[1], evaluate_run
-    if algo in ("ddpg", "ddpg_hybrid", "ddpg_hybrid_qd"):
+    if algo in ("ddpg", "ddpg_hybrid", "ddpg_hybrid_qd", "on_off_ddpg"):
+        # on_off_ddpg loads through DDPG.load too: model.zip names TryBothPolicy,
+        # whose predict returns the full action with the best on/off pattern
         # hybrid runs load through DDPG.load: model.zip names the hybrid
         # policy class, whose deterministic predict is the argmax head
         from ddpg.evaluate import evaluate_run
         from ddpg.runs import load_run
+
+        return load_run(run_dir)[1], evaluate_run
+    if algo in ("ddqn_td3", "ddqn_ddpg", "ddqn_ppo"):
+        # switch + pilot (ddqn_ppo: PPO pilot): scored through SwitchPilotPolicy (full env action)
+        from ddqn_td3.evaluate import evaluate_run, load_run
 
         return load_run(run_dir)[1], evaluate_run
     raise ValueError(f"unknown algo {algo!r}")

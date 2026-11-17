@@ -27,6 +27,16 @@ e2_2fbs   2-FBS noise sweep: fair2 winners {DDPG t15, TD3 t51} x binary_noise_st
           in {0, 0.1, 0.2, 0.3, 0.5, 0.8, 1.2, 1.6, 2.0} plus the tuned anchor
           {0.1, 0.3, 0.5, 0.8, 1.2} plus the tuned value as anchor, seeds 0-19,
           fair2 protocol. LABELED ABLATION. Run with LETTER_RUNS_DIR=letter_runs_2fbs.
+sp_hold   switch + pilot hold length: the fair2ddqn winners {ddqn_td3 t41,
+          ddqn_ddpg t22} (tuned at hold_k 1) x hold_k {4, 8}, seeds 0-19, fair2
+          protocol, plus hold_k 1 at seed 0 as the reproducibility check.
+          LABELED ABLATION. Run with LETTER_RUNS_DIR=letter_runs_2fbs.
+ha_pilot  Hybrid A pilot (ddqn_ppo/, docs/RL_ARCHITECTURES section 6.5): the
+          fair2 PPO winner t35's settings (clip_range 0.3 = the pinned value)
+          plus the default switch (exploration_fraction 0.2, hold_k 1), seeds
+          0-19, fair2 protocol, against t35's own seeds 0-19 in fair2. Not
+          tuned: a first read before the fair2ha campaign.
+          Run with LETTER_RUNS_DIR=letter_runs_2fbs.
 e2_ppo    PPO fair1 t43 unchanged, seeds 0-19, fair1 protocol: the on-policy
           check-up arm (no ablation; PPO has no binary noise knob)
 s0_10k    pyqd-fast, 10k steps, DDPG t27 + TD3 t28, seed 0          (Stage 0)
@@ -72,7 +82,10 @@ PEAK_MB_PER_WORKER = 30.0        # steps.csv exists until the run is scored
 
 _RUNS_ENV = {"ppo": "PPO_RUNS_DIR", "td3": "TD3_RUNS_DIR", "ddpg": "DDPG_RUNS_DIR",
              "ddpg_hybrid": "DDPG_RUNS_DIR", "td3_hybrid": "TD3_RUNS_DIR",
-             "ddpg_hybrid_qd": "DDPG_RUNS_DIR", "td3_hybrid_qd": "TD3_RUNS_DIR"}
+             "ddpg_hybrid_qd": "DDPG_RUNS_DIR", "td3_hybrid_qd": "TD3_RUNS_DIR",
+             "ddqn_td3": "TD3_RUNS_DIR", "ddqn_ddpg": "DDPG_RUNS_DIR",
+             "on_off_td3": "TD3_RUNS_DIR", "on_off_ddpg": "DDPG_RUNS_DIR",
+             "ddqn_ppo": "DDQN_PPO_RUNS_DIR", "ppo_onoff": "PPO_ONOFF_RUNS_DIR"}
 
 
 # --------------------------------------------------------------------------- #
@@ -240,6 +253,27 @@ def _arms(name: str) -> tuple[List[dict], str, int, List[int]]:
                              "overrides": {"binary_noise_std": sb}, "s_b": sb, "campaign": "fair2"})
         return arms, "fair2", 1000, list(range(20))
 
+    if name == "sp_hold":
+        # Only hold_k moves off the tuner-passed point (fair2ddqn ran at K = 1).
+        # K = 1 seeds 0-19 are the campaign's own records of these configs; the
+        # seed-0 K = 1 arm must reproduce them exactly, as e2_2fbs's anchor did.
+        arms = []
+        for base, algo in (("ddqn_td3_t41", "ddqn_td3"), ("ddqn_ddpg_t22", "ddqn_ddpg")):
+            arms.append({"arm": f"{base}_k1", "algo": algo, "base": base, "overrides": {},
+                         "hold_k": 1, "anchor": True, "campaign": "fair2ddqn", "seeds": [0]})
+            for k in (4, 8):
+                arms.append({"arm": f"{base}_k{k}", "algo": algo, "base": base,
+                             "overrides": {}, "hold_k": k, "campaign": "fair2ddqn"})
+        return arms, "fair2", 1000, list(range(20))
+
+    if name == "ha_pilot":
+        # t35's four searched PPO knobs; clip_range is pinned by build_experiment
+        # (0.3, which is t35's own value), exploration_fraction at the default.
+        arms = [{"arm": "ddqn_ppo_from_t35", "algo": "ddqn_ppo", "base": "ppo_t35",
+                 "overrides": {"clip_range": None, "exploration_fraction": 0.2},
+                 "hold_k": 1, "campaign": "fair2"}]
+        return arms, "fair2", 1000, list(range(20))
+
     if name == "e2_ppo":
         # PPO's tuner-passed winner, unchanged, under the fair1 protocol: a
         # check-up, not an ablation. Nothing moves off the tuned point, so the
@@ -267,6 +301,9 @@ def _campaign_dir(arm: dict):
     if arm.get("campaign") == "fair2":
         from .runner import FAIR2_DIR
         return FAIR2_DIR
+    if arm.get("campaign") == "fair2ddqn":
+        from .runner import FAIR2_DIR
+        return FAIR2_DIR.parent / "fair2ddqn"
     return None
 
 
@@ -294,12 +331,15 @@ def build_specs(name: str, seeds: List[int] | None = None,
     specs = []
     for seed in seeds:                          # seed-major: partial runs stay balanced
         for arm in arms:
+            if arm.get("seeds") is not None and seed not in arm["seeds"]:
+                continue                    # e.g. a seed-0-only reproducibility arm
             params = _params_for(arm)
             logpos = bool(arm.get("log_positions", False))
             key = spec_key(arm["algo"], params, seed, pd, True, probe_every,
                            log_positions=logpos,
                            min_on=arm.get("min_on"),
-                           force_on_steps=arm.get("force_on_steps"))
+                           force_on_steps=arm.get("force_on_steps"),
+                           hold_k=arm.get("hold_k"))
             run_id = f"{arm['arm']}_s{seed}"
             specs.append({
                 "experiment": name, "run_id": run_id, "arm": arm["arm"], "algo": arm["algo"],
@@ -308,6 +348,7 @@ def build_specs(name: str, seeds: List[int] | None = None,
                 "protocol_kind": kind, "instrument": True, "probe_every": probe_every,
                 "slim": kind != "smoke", "key": key, "log_positions": logpos,
                 "min_on": arm.get("min_on"), "force_on_steps": arm.get("force_on_steps"),
+                **({"hold_k": int(arm["hold_k"])} if arm.get("hold_k") is not None else {}),
                 "arm_meta": {k: v for k, v in arm.items() if k not in ("overrides",)},
                 "result_path": str(exp_dir / "results" / f"{run_id}.json"),
             })
@@ -335,8 +376,9 @@ def _child_env(name: str, algo: str) -> Dict[str, str]:
     runs.mkdir(parents=True, exist_ok=True)
     assert_allowed(runs)
     env[_RUNS_ENV[algo]] = str(runs)
-    if algo == "ppo":
+    if algo in ("ppo", "ddqn_ppo", "ppo_onoff"):
         env["PPO_LEDGER_PATH"] = str(runs / "ledger.csv")
+        env["PPO_RUNS_DIR"] = str(runs)
     for k in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",
               "VECLIB_MAXIMUM_THREADS", "NUMEXPR_NUM_THREADS"):
         env[k] = "1"
